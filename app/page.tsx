@@ -57,61 +57,39 @@ export default function Home() {
     setIsEditing(false);
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadPDF = () => {
     if (!artistInput || !generatedBio) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('Starting PDF download...');
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...artistInput,
-          generated: generatedBio,
-        }),
+      // Динамический импорт для клиентской генерации
+      import('@/lib/pdf-generator').then(({ generateEPKPDF }) => {
+        try {
+          console.log('Generating PDF on client...');
+          
+          // Генерируем PDF
+          const pdf = generateEPKPDF({
+            ...artistInput,
+            generated: generatedBio,
+          });
+
+          // Скачиваем PDF
+          const fileName = `EPK_${artistInput.name.replace(/\s+/g, '_')}.pdf`;
+          pdf.save(fileName);
+          
+          console.log('PDF downloaded successfully!');
+          setIsLoading(false);
+        } catch (err) {
+          console.error('PDF generation error:', err);
+          setError(err instanceof Error ? err.message : 'Ошибка при генерации PDF');
+          setIsLoading(false);
+        }
       });
-
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('Server error:', errorData);
-        throw new Error(errorData.error || 'Ошибка при генерации PDF');
-      }
-
-      // Получаем blob из ответа
-      const blob = await response.blob();
-      console.log('Blob received, size:', blob.size, 'type:', blob.type);
-      
-      if (blob.size === 0) {
-        throw new Error('Получен пустой файл');
-      }
-
-      // Создаем ссылку для скачивания
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `EPK_${artistInput.name.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      
-      console.log('Download triggered');
-      
-      // Очищаем
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }, 100);
     } catch (err) {
       console.error('PDF download error:', err);
       setError(err instanceof Error ? err.message : 'Ошибка при скачивании PDF');
-    } finally {
       setIsLoading(false);
     }
   };
