@@ -103,8 +103,16 @@ export async function enhanceArtistPortraitPro(
       }
     });
     
-    const faceRestoredUrl = Array.isArray(faceRestored) ? faceRestored[0] : faceRestored;
-    console.log('[AI Image Pro] Face restored:', faceRestoredUrl);
+    // Получаем URL из FileOutput
+    let faceRestoredUrl: string;
+    if (Array.isArray(faceRestored)) {
+      const firstOutput = faceRestored[0];
+      faceRestoredUrl = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
+    } else {
+      faceRestoredUrl = typeof faceRestored === 'string' ? faceRestored : (faceRestored as any).url();
+    }
+    
+    console.log('[AI Image Pro] Face restored URL:', faceRestoredUrl);
     
     // ЭТАП 2: Художественная стилизация с SDXL
     console.log('[AI Image Pro] Step 2: Artistic stylization with SDXL...', style);
@@ -135,8 +143,16 @@ export async function enhanceArtistPortraitPro(
       }
     });
     
-    const stylizedUrl = Array.isArray(stylized) ? stylized[0] : stylized;
-    console.log('[AI Image Pro] Stylized:', stylizedUrl);
+    // Получаем URL из FileOutput
+    let stylizedUrl: string;
+    if (Array.isArray(stylized)) {
+      const firstOutput = stylized[0];
+      stylizedUrl = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
+    } else {
+      stylizedUrl = typeof stylized === 'string' ? stylized : (stylized as any).url();
+    }
+    
+    console.log('[AI Image Pro] Stylized URL:', stylizedUrl);
     
     // ЭТАП 3: Финальный апскейл с Real-ESRGAN
     console.log('[AI Image Pro] Step 3: Final upscale with Real-ESRGAN...');
@@ -148,7 +164,14 @@ export async function enhanceArtistPortraitPro(
       }
     });
     
-    const finalUrl = Array.isArray(upscaled) ? upscaled[0] : upscaled;
+    // Получаем финальный URL из FileOutput
+    let finalUrl: string;
+    if (Array.isArray(upscaled)) {
+      const firstOutput = upscaled[0];
+      finalUrl = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
+    } else {
+      finalUrl = typeof upscaled === 'string' ? upscaled : (upscaled as any).url();
+    }
     
     const processingTime = Date.now() - startTime;
     console.log('[AI Image Pro] Professional enhancement completed!', {
@@ -209,8 +232,14 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
     const processingTime = Date.now() - startTime;
     console.log('[AI Image] Real-ESRGAN enhancement completed in', processingTime, 'ms');
     
-    // Получаем URL улучшенного изображения
-    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    // Получаем URL улучшенного изображения из FileOutput
+    let enhancedImageUrl: string;
+    if (Array.isArray(output)) {
+      const firstOutput = output[0];
+      enhancedImageUrl = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
+    } else {
+      enhancedImageUrl = typeof output === 'string' ? output : (output as any).url();
+    }
     
     if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
       throw new Error('Invalid output from Real-ESRGAN model');
@@ -305,7 +334,14 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
     const processingTime = Date.now() - startTime;
     console.log('[AI Image] CodeFormer face enhancement completed in', processingTime, 'ms');
     
-    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    // Получаем URL из FileOutput
+    let enhancedImageUrl: string;
+    if (Array.isArray(output)) {
+      const firstOutput = output[0];
+      enhancedImageUrl = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
+    } else {
+      enhancedImageUrl = typeof output === 'string' ? output : (output as any).url();
+    }
     
     if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
       throw new Error('Invalid output from CodeFormer model');
