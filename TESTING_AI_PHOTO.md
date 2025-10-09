@@ -38,25 +38,28 @@
 - Фото квадратное (180x180px)
 - Кириллица отображается корректно
 
-## 🎨 Ожидаемые эффекты AI:
+## 🎨 Ожидаемые эффекты AI (МИНИМАЛЬНЫЕ):
 
-### ✨ Драматичная обработка (основная):
-- **Освещение**: Bold cinematic lighting, dramatic shadows
-- **Цвета**: Deep blues and purples (синие/фиолетовые тона)
-- **Стиль**: Magazine cover quality
-- **Параметры**: strength 0.85, guidance_scale 9.0
+### ✨ Тонкая обработка (основная):
+- **Освещение**: Slight improvement, natural look
+- **Цвета**: Gentle color balance, no strong grading
+- **Стиль**: Professional but natural
+- **Параметры**: strength 0.25, guidance_scale 4.0
+- **Эффект**: Почти незаметно, как у хорошего фотографа
 
 ### 🎭 Стандартная обработка (fallback 1):
-- **Освещение**: Dramatic editorial lighting
-- **Цвета**: Blue/purple color grading
-- **Стиль**: Professional studio photography
-- **Параметры**: strength 0.8, guidance_scale 8.5
+- **Освещение**: Minimal lighting enhancement
+- **Цвета**: Very subtle adjustments
+- **Стиль**: Clean, professional, natural
+- **Параметры**: strength 0.3, guidance_scale 5.0
+- **Эффект**: Тонкие улучшения без перебора
 
 ### 🌟 Альтернативная обработка (fallback 2):
-- **Освещение**: Dramatic lighting
-- **Цвета**: Blue and purple color grading
-- **Стиль**: Stylish and modern aesthetic
-- **Параметры**: strength 0.75, guidance_scale 7.0
+- **Освещение**: Natural lighting
+- **Цвета**: Minimal color adjustments
+- **Стиль**: Modern, clean, professional
+- **Параметры**: strength 0.35, guidance_scale 4.5
+- **Эффект**: Ненавязчивые улучшения
 
 ## 🔍 Логи для отладки:
 
@@ -64,9 +67,9 @@
 ```
 [Upload] File saved successfully: { fileId: '...', fileName: '...', ... }
 [Enhance] Starting AI enhancement for file: ...
-[AI Image] Starting dramatic portrait enhancement...
+[AI Image] Starting subtle portrait enhancement...
 [AI Image] File uploaded to Replicate: ...
-[AI Image] Dramatic enhancement completed in XXXXms
+[AI Image] Subtle enhancement completed in XXXXms
 [Enhance] Enhancement completed successfully: { ... }
 ```
 
