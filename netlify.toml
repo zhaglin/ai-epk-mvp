@@ -1,9 +1,14 @@
+# Netlify configuration for Next.js
 [build]
   command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
+
+# Next.js Runtime - Essential for Next.js 13+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 # Environment variables (добавить OPENAI_API_KEY через Netlify Dashboard)
 # https://app.netlify.com/sites/YOUR-SITE/settings/deploys#environment
