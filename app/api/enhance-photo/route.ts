@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     console.log('[Enhance] Starting AI enhancement for file:', fileId);
     
     // Читаем временный файл
-    const tempFilePath = join(process.cwd(), 'tmp', `${fileId}.jpg`);
+    const tempFilePath = join(process.cwd(), 'tmp', 'uploads', `${fileId}.jpg`);
     
     if (!existsSync(tempFilePath)) {
       return NextResponse.json(
