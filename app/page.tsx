@@ -150,14 +150,29 @@ export default function Home() {
               <div className="space-y-8">
                 {/* Artist Photo Hero Section */}
                 {(artistInput as any)?.photoUrl && (
-                  <div className="text-center relative">
-                    <img
-                      src={(artistInput as any).photoUrl}
-                      alt={artistInput?.name}
-                      className="w-full max-w-md mx-auto h-80 object-cover rounded-2xl shadow-2xl"
-                    />
-                    <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      ✨ AI Enhanced
+                  <div className="text-center mb-8">
+                    <div className="relative inline-block w-full max-w-sm mx-auto">
+                      <img
+                        src={(artistInput as any).photoUrl}
+                        alt={artistInput?.name}
+                        className="w-full aspect-square object-cover rounded-2xl shadow-2xl"
+                      />
+                      <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                        ✨ AI Enhanced
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Оригинальное фото если нет улучшенного */}
+                {!(artistInput as any)?.photoUrl && (artistInput as any)?.originalPhotoUrl && (
+                  <div className="text-center mb-8">
+                    <div className="relative inline-block w-full max-w-sm mx-auto">
+                      <img
+                        src={(artistInput as any).originalPhotoUrl}
+                        alt={artistInput?.name}
+                        className="w-full aspect-square object-cover rounded-2xl shadow-2xl"
+                      />
                     </div>
                   </div>
                 )}

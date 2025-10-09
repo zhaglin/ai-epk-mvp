@@ -254,11 +254,11 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="relative">
+            <div className="relative w-full max-w-sm mx-auto">
               <img
                 src={photoState.enhancedUrl || photoState.preview || ''}
                 alt="Artist photo preview"
-                className="w-full h-64 object-cover rounded-lg shadow-md"
+                className="w-full aspect-square object-cover rounded-xl shadow-lg"
               />
               
               {/* Индикаторы состояния */}

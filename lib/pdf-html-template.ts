@@ -92,9 +92,8 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     
     /* Artist Photo */
     .artist-photo {
-      width: 100%;
-      max-width: 200px;
-      height: auto;
+      width: 180px;
+      height: 180px;
       border-radius: 12px;
       margin: 0 auto 24px auto;
       display: block;
