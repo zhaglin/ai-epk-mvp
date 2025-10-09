@@ -1,0 +1,176 @@
+import Replicate from 'replicate';
+
+// Инициализация Replicate клиента
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
+
+// Промпт для художественной обработки портретов
+export const ARTIST_PORTRAIT_PROMPT = `
+Artist portrait, editorial lighting, soft contrast, cinematic color grading. 
+Preserve natural facial features and expression, add modern musical visual style (house/techno aesthetic). 
+Maintain original pose and gender, enhance with artistic atmosphere and professional photography feel.
+High quality, detailed, studio lighting, magazine cover style.
+`;
+
+// Модель Stable Diffusion для портретов
+const PORTRAIT_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
+
+export interface ImageEnhancementResult {
+  success: boolean;
+  enhancedImageUrl?: string;
+  error?: string;
+  processingTime?: number;
+}
+
+/**
+ * Улучшает портрет артиста с помощью AI
+ * @param imageBuffer - Buffer изображения для обработки
+ * @returns Результат обработки с URL улучшенного изображения
+ */
+export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
+  const startTime = Date.now();
+  
+  try {
+    console.log('[AI Image] Starting portrait enhancement...');
+    
+    // Создаем файл в Replicate
+    const file = await replicate.files.create(imageBuffer, {
+      contentType: 'image/jpeg'
+    });
+    
+    console.log('[AI Image] File uploaded to Replicate:', file.id);
+    
+    // Запускаем модель для улучшения портрета
+    const output = await replicate.run(PORTRAIT_MODEL, {
+      input: {
+        prompt: ARTIST_PORTRAIT_PROMPT,
+        image: file.url,
+        num_inference_steps: 20,
+        guidance_scale: 7.5,
+        strength: 0.7, // Умеренная обработка, сохраняем оригинал
+        scheduler: "K_EULER",
+        seed: null, // Случайный seed для разнообразия
+      }
+    });
+    
+    const processingTime = Date.now() - startTime;
+    console.log('[AI Image] Enhancement completed in', processingTime, 'ms');
+    
+    // Получаем URL улучшенного изображения
+    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    
+    if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
+      throw new Error('Invalid output from AI model');
+    }
+    
+    return {
+      success: true,
+      enhancedImageUrl,
+      processingTime
+    };
+    
+  } catch (error) {
+    console.error('[AI Image] Enhancement failed:', error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
+/**
+ * Альтернативная модель для портретов (fallback)
+ */
+export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
+  const startTime = Date.now();
+  
+  try {
+    console.log('[AI Image] Trying fallback model...');
+    
+    // Используем другую модель как fallback
+    const fallbackModel = "black-forest-labs/flux-schnell:de9f05b6070d8a8c7c347e8d6b3d3b3b3b3b3b3b";
+    
+    const file = await replicate.files.create(imageBuffer, {
+      contentType: 'image/jpeg'
+    });
+    
+    const output = await replicate.run(fallbackModel, {
+      input: {
+        prompt: "professional portrait, studio lighting, high quality",
+        image: file.url,
+      }
+    });
+    
+    const processingTime = Date.now() - startTime;
+    
+    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    
+    return {
+      success: true,
+      enhancedImageUrl,
+      processingTime
+    };
+    
+  } catch (error) {
+    console.error('[AI Image] Fallback model also failed:', error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Fallback model failed'
+    };
+  }
+}
+
+/**
+ * Проверяет доступность Replicate API
+ */
+export async function checkReplicateAvailability(): Promise<boolean> {
+  try {
+    // Простая проверка - получаем список моделей
+    await replicate.models.list();
+    return true;
+  } catch (error) {
+    console.error('[AI Image] Replicate API unavailable:', error);
+    return false;
+  }
+}
+
+/**
+ * Валидирует изображение перед обработкой
+ */
+export function validateImage(imageBuffer: Buffer): { valid: boolean; error?: string } {
+  // Проверяем размер файла (максимум 10MB для AI обработки)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (imageBuffer.length > maxSize) {
+    return {
+      valid: false,
+      error: 'Image too large. Maximum size is 10MB.'
+    };
+  }
+  
+  // Проверяем минимальный размер
+  const minSize = 1024; // 1KB
+  if (imageBuffer.length < minSize) {
+    return {
+      valid: false,
+      error: 'Image too small. Minimum size is 1KB.'
+    };
+  }
+  
+  // Проверяем заголовки изображения
+  const header = imageBuffer.slice(0, 4);
+  const isJPEG = header[0] === 0xFF && header[1] === 0xD8;
+  const isPNG = header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47;
+  const isWebP = header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46;
+  
+  if (!isJPEG && !isPNG && !isWebP) {
+    return {
+      valid: false,
+      error: 'Unsupported image format. Please use JPEG, PNG, or WebP.'
+    };
+  }
+  
+  return { valid: true };
+}

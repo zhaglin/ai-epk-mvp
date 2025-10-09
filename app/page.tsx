@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ArtistForm from '@/components/ArtistForm';
 import BioEditor from '@/components/BioEditor';
 import { ArtistInput, GeneratedBio } from '@/types';
+import dynamic from 'next/dynamic';
 
 export default function Home() {
   const [generatedBio, setGeneratedBio] = useState<GeneratedBio | null>(null);
@@ -12,7 +13,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleFormSubmit = async (data: ArtistInput) => {
+  const handleFormSubmit = async (data: ArtistInput & { photoUrl?: string; originalPhotoUrl?: string }) => {
     setIsLoading(true);
     setError(null);
     setArtistInput(data);
@@ -57,39 +58,54 @@ export default function Home() {
     setIsEditing(false);
   };
 
-  const handleDownloadPDF = () => {
-    if (!artistInput || !generatedBio) return;
+  const handleDownloadPDF = async () => {
+    if (!artistInput || !generatedBio) {
+      setError('Нет данных для генерации PDF.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Динамический импорт для клиентской генерации
-      import('@/lib/pdf-generator').then(({ generateEPKPDF }) => {
-        try {
-          console.log('Generating PDF on client...');
-          
-          // Генерируем PDF
-          const pdf = generateEPKPDF({
-            ...artistInput,
-            generated: generatedBio,
-          });
-
-          // Скачиваем PDF
-          const fileName = `EPK_${artistInput.name.replace(/\s+/g, '_')}.pdf`;
-          pdf.save(fileName);
-          
-          console.log('PDF downloaded successfully!');
-          setIsLoading(false);
-        } catch (err) {
-          console.error('PDF generation error:', err);
-          setError(err instanceof Error ? err.message : 'Ошибка при генерации PDF');
-          setIsLoading(false);
-        }
+      console.log('Starting PDF generation...');
+      
+      // Отправляем запрос на серверный API для генерации PDF
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...artistInput,
+          generated: generatedBio,
+        }),
       });
-    } catch (err) {
-      console.error('PDF download error:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при скачивании PDF');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      // Получаем PDF как blob
+      const blob = await response.blob();
+      
+      // Создаем URL и скачиваем
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EPK_${artistInput.name.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      console.log('PDF generated successfully!');
+      
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      setError('Ошибка при генерации PDF. Попробуйте еще раз.');
+    } finally {
       setIsLoading(false);
     }
   };

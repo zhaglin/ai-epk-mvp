@@ -4,8 +4,17 @@ import { useState } from 'react';
 import { ArtistInput } from '@/types';
 
 interface ArtistFormProps {
-  onSubmit: (data: ArtistInput) => void;
+  onSubmit: (data: ArtistInput & { photoUrl?: string; originalPhotoUrl?: string }) => void;
   isLoading?: boolean;
+}
+
+interface PhotoUploadState {
+  file: File | null;
+  preview: string | null;
+  isUploading: boolean;
+  isEnhancing: boolean;
+  enhancedUrl: string | null;
+  error: string | null;
 }
 
 export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormProps) {
@@ -27,6 +36,15 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
 
   const [genresInput, setGenresInput] = useState('Techno, Melodic Techno, Progressive House');
   const [errors, setErrors] = useState<Partial<Record<keyof ArtistInput, string>>>({});
+  
+  const [photoState, setPhotoState] = useState<PhotoUploadState>({
+    file: null,
+    preview: null,
+    isUploading: false,
+    isEnhancing: false,
+    enhancedUrl: null,
+    error: null,
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ArtistInput, string>> = {};
@@ -67,7 +85,11 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
     e.preventDefault();
 
     if (validateForm()) {
-      onSubmit(formData);
+      onSubmit({
+        ...formData,
+        photoUrl: photoState.enhancedUrl || undefined,
+        originalPhotoUrl: photoState.preview || undefined,
+      });
     }
   };
 
@@ -80,8 +102,208 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
     setFormData((prev) => ({ ...prev, genres: genresArray }));
   };
 
+  const handlePhotoUpload = async (file: File) => {
+    // Валидация файла
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setPhotoState(prev => ({ ...prev, error: 'Файл слишком большой. Максимум 5MB.' }));
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoState(prev => ({ ...prev, error: 'Неподдерживаемый формат. Используйте JPEG, PNG или WebP.' }));
+      return;
+    }
+
+    // Создаем превью
+    const preview = URL.createObjectURL(file);
+    
+    setPhotoState(prev => ({
+      ...prev,
+      file,
+      preview,
+      error: null,
+      isUploading: true,
+    }));
+
+    try {
+      // Загружаем файл
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'Ошибка загрузки файла');
+      }
+
+      const uploadData = await uploadResponse.json();
+      console.log('File uploaded:', uploadData);
+
+      setPhotoState(prev => ({
+        ...prev,
+        isUploading: false,
+        isEnhancing: true,
+      }));
+
+      // Улучшаем фото с помощью AI
+      const enhanceResponse = await fetch('/api/enhance-photo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileId: uploadData.fileId }),
+      });
+
+      const enhanceData = await enhanceResponse.json();
+
+      if (enhanceData.success) {
+        setPhotoState(prev => ({
+          ...prev,
+          isEnhancing: false,
+          enhancedUrl: enhanceData.enhancedUrl,
+        }));
+        console.log('Photo enhanced successfully:', enhanceData);
+      } else {
+        // Fallback на оригинальное фото
+        setPhotoState(prev => ({
+          ...prev,
+          isEnhancing: false,
+          enhancedUrl: null,
+        }));
+        console.log('AI enhancement failed, using original photo');
+      }
+
+    } catch (error) {
+      console.error('Photo upload/enhancement failed:', error);
+      setPhotoState(prev => ({
+        ...prev,
+        isUploading: false,
+        isEnhancing: false,
+        error: error instanceof Error ? error.message : 'Ошибка обработки фото',
+      }));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handlePhotoUpload(file);
+    }
+  };
+
+  const removePhoto = () => {
+    if (photoState.preview) {
+      URL.revokeObjectURL(photoState.preview);
+    }
+    setPhotoState({
+      file: null,
+      preview: null,
+      isUploading: false,
+      isEnhancing: false,
+      enhancedUrl: null,
+      error: null,
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Загрузка фото */}
+      <div className="border-b pb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Фото артиста <span className="text-gray-500">(необязательно)</span>
+        </label>
+        <p className="text-sm text-gray-500 mb-4">
+          Загрузите портрет или промо-фото — AI сделает его стильным для EPK
+        </p>
+        
+        {!photoState.file ? (
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+              id="photo-upload"
+              disabled={isLoading || photoState.isUploading || photoState.isEnhancing}
+            />
+            <label
+              htmlFor="photo-upload"
+              className={`cursor-pointer ${(isLoading || photoState.isUploading || photoState.isEnhancing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="mt-4">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium text-blue-600 hover:text-blue-500">
+                    Нажмите для загрузки
+                  </span>
+                  {' '}или перетащите файл сюда
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  JPEG, PNG, WebP до 5MB
+                </p>
+              </div>
+            </label>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="relative">
+              <img
+                src={photoState.enhancedUrl || photoState.preview || ''}
+                alt="Artist photo preview"
+                className="w-full h-64 object-cover rounded-lg shadow-md"
+              />
+              
+              {/* Индикаторы состояния */}
+              {(photoState.isUploading || photoState.isEnhancing) && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                  <div className="text-white text-center">
+                    <svg className="animate-spin h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p className="text-sm">
+                      {photoState.isUploading ? 'Загрузка...' : 'AI обрабатывает изображение...'}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Статус улучшения */}
+              {photoState.enhancedUrl && !photoState.isEnhancing && (
+                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  ✨ Улучшено
+                </div>
+              )}
+            </div>
+            
+            {/* Кнопка удаления */}
+            <button
+              type="button"
+              onClick={removePhoto}
+              className="text-sm text-red-600 hover:text-red-700 font-medium"
+              disabled={photoState.isUploading || photoState.isEnhancing}
+            >
+              Удалить фото
+            </button>
+          </div>
+        )}
+        
+        {/* Ошибки */}
+        {photoState.error && (
+          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">{photoState.error}</p>
+          </div>
+        )}
+      </div>
+
       {/* Имя артиста */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
