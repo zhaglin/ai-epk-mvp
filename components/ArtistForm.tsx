@@ -92,7 +92,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           id="name"
           value={formData.name}
           onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white ${
             errors.name ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: DJ TechnoNik"
@@ -111,7 +111,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           id="city"
           value={formData.city}
           onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white ${
             errors.city ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Москва"
@@ -130,7 +130,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           id="genres"
           value={genresInput}
           onChange={(e) => handleGenresChange(e.target.value)}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white ${
             errors.genres ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Techno, House, Melodic Techno (через запятую)"
@@ -161,7 +161,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           value={formData.venues}
           onChange={(e) => setFormData((prev) => ({ ...prev, venues: e.target.value }))}
           rows={3}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
             errors.venues ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Клубы Москвы и Санкт-Петербурга, фестиваль Signal 2024"
@@ -180,7 +180,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           value={formData.style}
           onChange={(e) => setFormData((prev) => ({ ...prev, style: e.target.value }))}
           rows={3}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
             errors.style ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Энергичные сеты с глубокими басами и гипнотичными мелодиями"
@@ -199,7 +199,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           value={formData.skills}
           onChange={(e) => setFormData((prev) => ({ ...prev, skills: e.target.value }))}
           rows={3}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
             errors.skills ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Диджеинг, продакшн в Ableton Live, микширование и мастеринг"
@@ -218,7 +218,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           value={formData.achievements}
           onChange={(e) => setFormData((prev) => ({ ...prev, achievements: e.target.value }))}
           rows={3}
-          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
             errors.achievements ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Например: Релизы на Drumcode, выступления на Awakenings и Time Warp"
@@ -246,7 +246,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, instagram: e.target.value },
                 }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
               placeholder="https://instagram.com/yourname"
               disabled={isLoading}
             />
@@ -266,7 +266,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, soundcloud: e.target.value },
                 }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
               placeholder="https://soundcloud.com/yourname"
               disabled={isLoading}
             />
@@ -286,7 +286,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, mixcloud: e.target.value },
                 }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
               placeholder="https://mixcloud.com/yourname"
               disabled={isLoading}
             />
@@ -306,7 +306,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, website: e.target.value },
                 }))
               }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
               placeholder="https://yourwebsite.com"
               disabled={isLoading}
             />
