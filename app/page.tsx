@@ -78,6 +78,8 @@ export default function Home() {
         },
         body: JSON.stringify({
           ...artistInput,
+          photoUrl: (artistInput as any)?.photoUrl,
+          originalPhotoUrl: (artistInput as any)?.originalPhotoUrl,
           generated: generatedBio,
         }),
       });
