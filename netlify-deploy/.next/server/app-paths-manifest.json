@@ -1,9 +1,9 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
   "/api/enhance-photo/route": "app/api/enhance-photo/route.js",
   "/api/generate-bio/route": "app/api/generate-bio/route.js",
-  "/api/temp-file/[filename]/route": "app/api/temp-file/[filename]/route.js",
   "/api/upload/route": "app/api/upload/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/api/generate-pdf/route": "app/api/generate-pdf/route.js"
+  "/api/temp-file/[filename]/route": "app/api/temp-file/[filename]/route.js",
+  "/api/generate-pdf/route": "app/api/generate-pdf/route.js",
+  "/page": "app/page.js"
 }
