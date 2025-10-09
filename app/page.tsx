@@ -64,6 +64,7 @@ export default function Home() {
     setError(null);
 
     try {
+      console.log('Starting PDF download...');
       const response = await fetch('/api/generate-pdf', {
         method: 'POST',
         headers: {
@@ -75,13 +76,23 @@ export default function Home() {
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
       if (!response.ok) {
-        throw new Error('Ошибка при генерации PDF');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Server error:', errorData);
+        throw new Error(errorData.error || 'Ошибка при генерации PDF');
       }
 
       // Получаем blob из ответа
       const blob = await response.blob();
+      console.log('Blob received, size:', blob.size, 'type:', blob.type);
       
+      if (blob.size === 0) {
+        throw new Error('Получен пустой файл');
+      }
+
       // Создаем ссылку для скачивания
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -90,10 +101,15 @@ export default function Home() {
       document.body.appendChild(a);
       a.click();
       
+      console.log('Download triggered');
+      
       // Очищаем
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
     } catch (err) {
+      console.error('PDF download error:', err);
       setError(err instanceof Error ? err.message : 'Ошибка при скачивании PDF');
     } finally {
       setIsLoading(false);

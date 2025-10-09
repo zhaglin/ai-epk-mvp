@@ -6,41 +6,47 @@ import React from 'react';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('PDF generation started...');
     const artistData: ArtistData = await request.json();
+    console.log('Artist data received:', artistData.name);
 
     // Валидация данных
     if (!artistData.name || !artistData.city || !artistData.generated) {
+      console.error('Validation failed: missing required data');
       return NextResponse.json(
         { error: 'Недостаточно данных для генерации PDF' },
         { status: 400 }
       );
     }
 
+    console.log('Creating PDF element...');
     // Генерируем PDF элемент
     const pdfElement = React.createElement(EPKDocument, { data: artistData });
     
-    // Рендерим в buffer
-    const pdfStream = await ReactPDF.renderToStream(pdfElement as any);
+    console.log('Rendering PDF to buffer...');
+    // Используем renderToBuffer вместо renderToStream для простоты
+    const pdfBuffer = await ReactPDF.renderToBuffer(pdfElement as any);
     
-    // Конвертируем stream в array buffer
-    const chunks: Buffer[] = [];
-    for await (const chunk of pdfStream as any) {
-      chunks.push(Buffer.from(chunk));
-    }
-    const pdfBuffer = Buffer.concat(chunks);
+    console.log('PDF buffer created, size:', pdfBuffer.length);
 
     // Возвращаем PDF файл
-    return new NextResponse(pdfBuffer as any, {
+    const response = new NextResponse(pdfBuffer as any, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="EPK_${artistData.name.replace(/\s+/g, '_')}.pdf"`,
+        'Content-Length': pdfBuffer.length.toString(),
       },
     });
+    
+    console.log('PDF response created successfully');
+    return response;
   } catch (error) {
     console.error('Error generating PDF:', error);
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return NextResponse.json(
-      { error: 'Ошибка при генерации PDF' },
+      { error: 'Ошибка при генерации PDF', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
