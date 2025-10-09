@@ -7,12 +7,13 @@ const replicate = new Replicate({
 
 // Промпт для художественной обработки портретов
 export const ARTIST_PORTRAIT_PROMPT = `
-Professional artist portrait with subtle enhancement only.
-Very minimal changes: slightly improve lighting, add gentle warmth or cool tone, 
-enhance sharpness and contrast very softly.
-Keep everything natural - no dramatic effects, no strong color grading, no filters.
-Clean, professional, modern aesthetic with barely visible improvements.
-High quality photography with minimal artistic touch - looks natural, not processed.
+Professional DJ/music artist portrait with minimal enhancement.
+CRITICAL: Preserve original person's identity, gender, age, facial features, and appearance completely.
+ONLY minor improvements: slightly better lighting, gentle contrast boost, minimal color correction.
+NO changes to: face shape, skin texture, hair, clothing, pose, background.
+Keep natural and realistic - no filters, no dramatic effects.
+Style: clean, modern, professional music industry look.
+Result should look like original photo but slightly better quality.
 `;
 
 // Модель Stable Diffusion для портретов
@@ -51,9 +52,9 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
       input: {
         prompt: ARTIST_PORTRAIT_PROMPT,
         image: file.url,
-        num_inference_steps: 15,
-        guidance_scale: 5.0, // Минимальное следование промпту - больше похоже на оригинал
-        strength: 0.3, // Очень слабая обработка - только тонкие улучшения
+        num_inference_steps: 10, // Еще меньше шагов для минимальной обработки
+        guidance_scale: 3.0, // Очень слабое следование промпту - максимально сохранить оригинал
+        strength: 0.15, // Минимальная обработка - только качество, без изменений
         scheduler: "K_EULER",
       }
     });
@@ -99,11 +100,11 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
     
     const output = await replicate.run(ALTERNATIVE_MODEL, {
       input: {
-        prompt: "Professional portrait with minimal enhancement, natural lighting, subtle improvements only, clean and modern style",
+        prompt: "DJ portrait quality improvement only. Preserve person completely - no face/identity changes. Only lighting and contrast.",
         image: file.url,
-        num_inference_steps: 12,
-        guidance_scale: 4.5,
-        strength: 0.35, // Очень тонкая обработка
+        num_inference_steps: 8,
+        guidance_scale: 2.0,
+        strength: 0.10, // Минимальная обработка
         scheduler: "K_EULER",
       }
     });
@@ -142,20 +143,21 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
     });
     
     const subtlePrompt = `
-    Professional portrait with very subtle improvements.
-    Minimal enhancement: slightly better lighting, gentle sharpness, soft color balance.
-    No dramatic effects, no strong filters, no obvious changes.
-    Natural, clean, professional look - barely noticeable improvements.
-    Keep original atmosphere and style completely intact.
+    DJ/music artist portrait with minimal quality improvement.
+    CRITICAL: Keep exact same person - no gender/age/face changes.
+    ONLY: slightly better lighting, gentle contrast, minimal sharpness.
+    NO: filters, dramatic effects, color grading, face changes.
+    Preserve: identity, features, clothing, background, pose.
+    Result: original photo with subtle quality enhancement.
     `;
     
     const output = await replicate.run(PORTRAIT_MODEL, {
       input: {
         prompt: subtlePrompt,
         image: file.url,
-        num_inference_steps: 12,
-        guidance_scale: 4.0, // Очень слабое следование промпту
-        strength: 0.25, // Минимальная обработка
+        num_inference_steps: 8, // Минимум шагов
+        guidance_scale: 2.5, // Очень слабое влияние промпта
+        strength: 0.12, // Почти не изменяем
         scheduler: "K_EULER",
       }
     });
