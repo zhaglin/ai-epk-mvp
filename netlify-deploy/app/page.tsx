@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import ArtistForm from '@/components/ArtistForm';
-import BioEditor from '@/components/BioEditor';
 import { ArtistInput, GeneratedBio } from '@/types';
 
 export default function Home() {
@@ -10,7 +9,6 @@ export default function Home() {
   const [artistInput, setArtistInput] = useState<ArtistInput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
 
   const handleFormSubmit = async (data: ArtistInput) => {
     setIsLoading(true);
@@ -32,7 +30,6 @@ export default function Home() {
 
       const bio: GeneratedBio = await response.json();
       setGeneratedBio(bio);
-      setIsEditing(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка');
     } finally {
@@ -40,21 +37,10 @@ export default function Home() {
     }
   };
 
-  const handleRegenerate = async () => {
-    if (!artistInput) return;
-    await handleFormSubmit(artistInput);
-  };
-
-  const handleSaveEdit = (editedBio: GeneratedBio) => {
-    setGeneratedBio(editedBio);
-    setIsEditing(false);
-  };
-
   const handleReset = () => {
     setGeneratedBio(null);
     setArtistInput(null);
     setError(null);
-    setIsEditing(false);
   };
 
   return (
@@ -85,12 +71,6 @@ export default function Home() {
                 </div>
               )}
             </>
-          ) : isEditing ? (
-            <BioEditor
-              initialBio={generatedBio}
-              onSave={handleSaveEdit}
-              onCancel={() => setIsEditing(false)}
-            />
           ) : (
             <>
               {/* Generated Bio Result */}
@@ -112,7 +92,7 @@ export default function Home() {
                 {/* Full Bio */}
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">Bio</h3>
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{generatedBio.bio}</p>
+                  <p className="text-gray-700 leading-relaxed">{generatedBio.bio}</p>
                 </div>
 
                 {/* Key Highlights */}
@@ -178,36 +158,19 @@ export default function Home() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="space-y-3 pt-6 border-t">
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="flex-1 px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition"
-                    >
-                      ✏️ Редактировать
-                    </button>
-                    <button
-                      onClick={handleRegenerate}
-                      disabled={isLoading}
-                      className="flex-1 px-6 py-3 bg-white border-2 border-green-600 text-green-600 font-medium rounded-lg hover:bg-green-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? '⏳ Генерирую...' : '🔄 Регенерировать'}
-                    </button>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleReset}
-                      className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition"
-                    >
-                      Создать новое BIO
-                    </button>
-                    <button
-                      disabled
-                      className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                      📄 Скачать PDF (скоро)
-                    </button>
-                  </div>
+                <div className="flex gap-4 pt-6 border-t">
+                  <button
+                    onClick={handleReset}
+                    className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Создать новое BIO
+                  </button>
+                  <button
+                    disabled
+                    className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    Скачать PDF (скоро)
+                  </button>
                 </div>
               </div>
             </>
