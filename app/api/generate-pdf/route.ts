@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ReactPDF from '@react-pdf/renderer';
+import { renderToStream } from '@react-pdf/renderer';
 import { EPKDocument } from '@/lib/pdf-template';
 import { ArtistData } from '@/types';
 import React from 'react';
@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Creating PDF element...');
-    // Генерируем PDF элемент
-    const pdfElement = React.createElement(EPKDocument, { data: artistData });
+    console.log('Creating PDF...');
     
     console.log('Rendering PDF to stream...');
-    // Используем правильный API - renderToStream
-    const stream = await ReactPDF.renderToStream(pdfElement as any);
+    // Используем правильный импорт - renderToStream напрямую
+    const stream = await renderToStream(
+      React.createElement(EPKDocument, { data: artistData }) as any
+    );
     
     console.log('Converting stream to buffer...');
     // Конвертируем stream в buffer
