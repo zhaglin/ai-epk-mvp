@@ -16,11 +16,10 @@ Style: clean, modern, professional music industry look.
 Result should look like original photo but slightly better quality.
 `;
 
-// Модель Stable Diffusion для портретов
-const PORTRAIT_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
-
-// Альтернативная модель для более заметных эффектов (используем тот же SDXL)
-const ALTERNATIVE_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
+// Лучшие модели для улучшения портретов на Replicate
+const PORTRAIT_MODEL = "nightmareai/real-esrgan:42fed1c4974146d4d2414e2be2c5277c7fcf05fcc3a73abf41610695738c1d7b"; // Real-ESRGAN для улучшения качества
+const ALTERNATIVE_MODEL = "jingyunliang/swinir:latest"; // SwinIR для суперразрешения
+const FACE_ENHANCEMENT_MODEL = "sczhou/codeformer:7de2ea26c616d5bf2245ad0d5e24f0ff9a6204578a5c876db53142edd9d2cd56"; // CodeFormer для улучшения лиц
 
 export interface ImageEnhancementResult {
   success: boolean;
@@ -30,7 +29,7 @@ export interface ImageEnhancementResult {
 }
 
 /**
- * Улучшает портрет артиста с помощью AI
+ * Улучшает портрет артиста с помощью Real-ESRGAN (лучшая модель для улучшения качества)
  * @param imageBuffer - Buffer изображения для обработки
  * @returns Результат обработки с URL улучшенного изображения
  */
@@ -38,7 +37,7 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
   const startTime = Date.now();
   
   try {
-    console.log('[AI Image] Starting portrait enhancement...');
+    console.log('[AI Image] Starting Real-ESRGAN portrait enhancement...');
     
     // Создаем файл в Replicate
     const file = await replicate.files.create(imageBuffer, {
@@ -47,26 +46,23 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
     
     console.log('[AI Image] File uploaded to Replicate:', file.id);
     
-    // Запускаем модель для улучшения портрета
+    // Запускаем Real-ESRGAN для улучшения качества изображения
     const output = await replicate.run(PORTRAIT_MODEL, {
       input: {
-        prompt: ARTIST_PORTRAIT_PROMPT,
         image: file.url,
-        num_inference_steps: 10, // Еще меньше шагов для минимальной обработки
-        guidance_scale: 3.0, // Очень слабое следование промпту - максимально сохранить оригинал
-        strength: 0.15, // Минимальная обработка - только качество, без изменений
-        scheduler: "K_EULER",
+        scale: 2, // Увеличиваем разрешение в 2 раза
+        face_enhance: true, // Включаем улучшение лиц
       }
     });
     
     const processingTime = Date.now() - startTime;
-    console.log('[AI Image] Enhancement completed in', processingTime, 'ms');
+    console.log('[AI Image] Real-ESRGAN enhancement completed in', processingTime, 'ms');
     
     // Получаем URL улучшенного изображения
     const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
     
     if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
-      throw new Error('Invalid output from AI model');
+      throw new Error('Invalid output from Real-ESRGAN model');
     }
     
     return {
@@ -76,23 +72,23 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
     };
     
   } catch (error) {
-    console.error('[AI Image] Enhancement failed:', error);
+    console.error('[AI Image] Real-ESRGAN enhancement failed:', error);
     
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: error instanceof Error ? error.message : 'Real-ESRGAN enhancement failed'
     };
   }
 }
 
 /**
- * Альтернативная модель для портретов (fallback)
+ * Альтернативная модель SwinIR для суперразрешения (fallback)
  */
 export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
   const startTime = Date.now();
   
   try {
-    console.log('[AI Image] Trying fallback model...');
+    console.log('[AI Image] Trying SwinIR fallback model...');
     
     const file = await replicate.files.create(imageBuffer, {
       contentType: 'image/jpeg'
@@ -100,75 +96,18 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
     
     const output = await replicate.run(ALTERNATIVE_MODEL, {
       input: {
-        prompt: "DJ portrait quality improvement only. Preserve person completely - no face/identity changes. Only lighting and contrast.",
         image: file.url,
-        num_inference_steps: 8,
-        guidance_scale: 2.0,
-        strength: 0.10, // Минимальная обработка
-        scheduler: "K_EULER",
+        task_type: "Real-World Image Super-Resolution-Large", // Лучший режим для портретов
       }
     });
     
     const processingTime = Date.now() - startTime;
-    
-    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
-    
-    return {
-      success: true,
-      enhancedImageUrl,
-      processingTime
-    };
-    
-  } catch (error) {
-    console.error('[AI Image] Fallback model also failed:', error);
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Fallback model failed'
-    };
-  }
-}
-
-/**
- * Тонкая обработка портрета с минимальными изменениями
- */
-export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
-  const startTime = Date.now();
-  
-  try {
-    console.log('[AI Image] Starting subtle portrait enhancement...');
-    
-    const file = await replicate.files.create(imageBuffer, {
-      contentType: 'image/jpeg'
-    });
-    
-    const subtlePrompt = `
-    DJ/music artist portrait with minimal quality improvement.
-    CRITICAL: Keep exact same person - no gender/age/face changes.
-    ONLY: slightly better lighting, gentle contrast, minimal sharpness.
-    NO: filters, dramatic effects, color grading, face changes.
-    Preserve: identity, features, clothing, background, pose.
-    Result: original photo with subtle quality enhancement.
-    `;
-    
-    const output = await replicate.run(PORTRAIT_MODEL, {
-      input: {
-        prompt: subtlePrompt,
-        image: file.url,
-        num_inference_steps: 8, // Минимум шагов
-        guidance_scale: 2.5, // Очень слабое влияние промпта
-        strength: 0.12, // Почти не изменяем
-        scheduler: "K_EULER",
-      }
-    });
-    
-    const processingTime = Date.now() - startTime;
-    console.log('[AI Image] Subtle enhancement completed in', processingTime, 'ms');
+    console.log('[AI Image] SwinIR enhancement completed in', processingTime, 'ms');
     
     const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
     
     if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
-      throw new Error('Invalid output from subtle AI model');
+      throw new Error('Invalid output from SwinIR model');
     }
     
     return {
@@ -178,11 +117,59 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
     };
     
   } catch (error) {
-    console.error('[AI Image] Subtle enhancement failed:', error);
+    console.error('[AI Image] SwinIR fallback model also failed:', error);
     
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Subtle enhancement failed'
+      error: error instanceof Error ? error.message : 'SwinIR fallback model failed'
+    };
+  }
+}
+
+/**
+ * Специализированное улучшение лиц с помощью CodeFormer
+ */
+export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
+  const startTime = Date.now();
+  
+  try {
+    console.log('[AI Image] Starting CodeFormer face enhancement...');
+    
+    const file = await replicate.files.create(imageBuffer, {
+      contentType: 'image/jpeg'
+    });
+    
+    const output = await replicate.run(FACE_ENHANCEMENT_MODEL, {
+      input: {
+        image: file.url,
+        codeformer_fidelity: 0.9, // Высокая точность сохранения лица
+        background_enhance: true, // Улучшение фона
+        face_upsample: true, // Улучшение разрешения лица
+        upscale: 2, // Увеличение разрешения в 2 раза
+      }
+    });
+    
+    const processingTime = Date.now() - startTime;
+    console.log('[AI Image] CodeFormer face enhancement completed in', processingTime, 'ms');
+    
+    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    
+    if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
+      throw new Error('Invalid output from CodeFormer model');
+    }
+    
+    return {
+      success: true,
+      enhancedImageUrl,
+      processingTime
+    };
+    
+  } catch (error) {
+    console.error('[AI Image] CodeFormer face enhancement failed:', error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'CodeFormer face enhancement failed'
     };
   }
 }

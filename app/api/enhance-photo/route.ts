@@ -53,19 +53,19 @@ export async function POST(request: NextRequest) {
              processingTime = Date.now() - startTime;
              console.log('[Enhance] Simple enhancement completed in', processingTime, 'ms');
            } else {
-             // Пытаемся улучшить изображение с помощью AI (тонкая обработка)
-             let result = await enhanceArtistPortraitDramatic(imageBuffer);
+             // Трехуровневая система AI-улучшения с лучшими моделями
+             let result = await enhanceArtistPortrait(imageBuffer); // Real-ESRGAN (основная)
              
-             // Если тонкая модель не сработала, пробуем обычную
+             // Если Real-ESRGAN не сработала, пробуем SwinIR
              if (!result.success) {
-               console.log('[Enhance] Dramatic model failed, trying standard...');
-               result = await enhanceArtistPortrait(imageBuffer);
+               console.log('[Enhance] Real-ESRGAN failed, trying SwinIR...');
+               result = await enhanceArtistPortraitFallback(imageBuffer);
              }
              
-             // Если и обычная не сработала, пробуем fallback
+             // Если и SwinIR не сработала, пробуем CodeFormer
              if (!result.success) {
-               console.log('[Enhance] Standard model failed, trying fallback...');
-               result = await enhanceArtistPortraitFallback(imageBuffer);
+               console.log('[Enhance] SwinIR failed, trying CodeFormer...');
+               result = await enhanceArtistPortraitDramatic(imageBuffer);
              }
              
              if (!result.success) {
