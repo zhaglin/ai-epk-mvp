@@ -1,4 +1,3 @@
-import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import { ArtistData } from '@/types';
 
@@ -107,7 +106,7 @@ interface PDFTemplateProps {
   data: ArtistData;
 }
 
-export const EPKDocument: React.FC<PDFTemplateProps> = ({ data }) => {
+export const EPKDocument = ({ data }: PDFTemplateProps) => {
   const { name, city, genres, generated, links } = data;
   const generatedDate = new Date().toLocaleDateString('ru-RU', {
     year: 'numeric',
