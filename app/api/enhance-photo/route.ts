@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { enhanceArtistPortrait, enhanceArtistPortraitFallback, enhanceArtistPortraitDramatic, validateImage } from '@/lib/aiImage';
+import { 
+  enhanceArtistPortraitPro, 
+  enhanceArtistPortrait, 
+  enhanceArtistPortraitFallback, 
+  enhanceArtistPortraitDramatic, 
+  validateImage,
+  type StylePreset,
+  type Intensity 
+} from '@/lib/aiImage';
 import { enhanceImageSimple, shouldUseSimpleEnhancement } from '@/lib/simpleImageEnhancement';
 import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileId, fileName } = await request.json();
+    const { fileId, fileName, style, intensity, seed } = await request.json();
     
     if (!fileId && !fileName) {
       return NextResponse.json(
@@ -18,7 +26,14 @@ export async function POST(request: NextRequest) {
     }
     
     const actualFileName = fileName || `${fileId}.jpg`;
-    console.log('[Enhance] Starting AI enhancement for file:', actualFileName);
+    const enhancementStyle = (style as StylePreset) || 'natural';
+    const enhancementIntensity = (intensity as Intensity) || 'medium';
+    
+    console.log('[Enhance] Starting AI enhancement for file:', actualFileName, {
+      style: enhancementStyle,
+      intensity: enhancementIntensity,
+      seed
+    });
     
     // Читаем временный файл
     const tempFilePath = join(process.cwd(), 'tmp', 'uploads', actualFileName);
@@ -54,18 +69,21 @@ export async function POST(request: NextRequest) {
              processingTime = Date.now() - startTime;
              console.log('[Enhance] Simple enhancement completed in', processingTime, 'ms');
            } else {
-             // Трехуровневая система AI-улучшения с лучшими моделями
-             let result = await enhanceArtistPortrait(imageBuffer); // Real-ESRGAN (основная)
+             // ПРОФЕССИОНАЛЬНЫЙ ПАЙПЛАЙН с тремя этапами
+             let result = await enhanceArtistPortraitPro(imageBuffer, {
+               style: enhancementStyle,
+               intensity: enhancementIntensity,
+               seed
+             });
              
-             // Если Real-ESRGAN не сработала, пробуем SwinIR
+             // Если профессиональный пайплайн не сработал, пробуем упрощенные версии
              if (!result.success) {
-               console.log('[Enhance] Real-ESRGAN failed, trying SwinIR...');
-               result = await enhanceArtistPortraitFallback(imageBuffer);
+               console.log('[Enhance] Pro pipeline failed, trying Real-ESRGAN only...');
+               result = await enhanceArtistPortrait(imageBuffer);
              }
              
-             // Если и SwinIR не сработала, пробуем CodeFormer
              if (!result.success) {
-               console.log('[Enhance] SwinIR failed, trying CodeFormer...');
+               console.log('[Enhance] Real-ESRGAN failed, trying CodeFormer...');
                result = await enhanceArtistPortraitDramatic(imageBuffer);
              }
              
