@@ -27,21 +27,12 @@ export async function POST(request: NextRequest) {
 
     const artistInput: ArtistInput = body;
 
-    // 3. Проверка API ключа
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY не установлен');
-      return NextResponse.json(
-        { error: 'Ошибка конфигурации сервера. Обратитесь к администратору.' },
-        { status: 500 }
-      );
-    }
-
-    // 4. Формирование промптов
+    // 3. Формирование промптов
     const userPrompt = generateUserPrompt(artistInput);
 
     console.log('Отправка запроса к OpenAI...');
 
-    // 5. Вызов OpenAI API
+    // 4. Вызов OpenAI API
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -53,24 +44,24 @@ export async function POST(request: NextRequest) {
       max_tokens: 1000,
     });
 
-    // 6. Извлечение ответа
+    // 5. Извлечение ответа
     const responseContent = completion.choices[0]?.message?.content;
 
     if (!responseContent) {
       throw new Error('GPT не вернул ответ');
     }
 
-    // 7. Парсинг JSON ответа
+    // 6. Парсинг JSON ответа
     const generatedBio: GeneratedBio = JSON.parse(responseContent);
 
-    // 8. Валидация структуры ответа
+    // 7. Валидация структуры ответа
     if (!generatedBio.pitch || !generatedBio.bio || !Array.isArray(generatedBio.highlights)) {
       throw new Error('Некорректная структура ответа от GPT');
     }
 
     console.log('BIO успешно сгенерирован');
 
-    // 9. Возврат результата
+    // 8. Возврат результата
     return NextResponse.json(generatedBio, { status: 200 });
   } catch (error) {
     console.error('Ошибка генерации BIO:', error);

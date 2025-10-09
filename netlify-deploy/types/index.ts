@@ -35,5 +35,7 @@ export interface GeneratedBio {
 export interface ArtistData extends ArtistInput {
   generated?: GeneratedBio;
   generatedAt?: string;
+  photoUrl?: string;        // URL обработанного фото артиста
+  originalPhotoUrl?: string; // URL оригинального фото (fallback)
 }
 

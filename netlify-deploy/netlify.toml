@@ -1,4 +1,4 @@
-# Netlify configuration for Next.js
+# Netlify configuration for ArtistOne EPK Generator
 [build]
   command = "npm run build"
   publish = ".next"
@@ -6,10 +6,28 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Next.js Runtime - Essential for Next.js 13+
+# Next.js Runtime - Essential for Next.js 15+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Environment variables (добавить OPENAI_API_KEY через Netlify Dashboard)
+# Environment variables (настроить через Netlify Dashboard)
 # https://app.netlify.com/sites/YOUR-SITE/settings/deploys#environment
+# 
+# Required environment variables:
+# - OPENAI_API_KEY=your_openai_api_key
+# - REPLICATE_API_TOKEN=your_replicate_token
+# 
+# Optional:
+# - NODE_ENV=production
 
+# Redirects for Next.js API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

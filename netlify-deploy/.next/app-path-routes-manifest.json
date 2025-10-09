@@ -1,0 +1,9 @@
+{
+  "/api/enhance-photo/route": "/api/enhance-photo",
+  "/api/generate-bio/route": "/api/generate-bio",
+  "/api/temp-file/[filename]/route": "/api/temp-file/[filename]",
+  "/api/upload/route": "/api/upload",
+  "/_not-found/page": "/_not-found",
+  "/page": "/",
+  "/api/generate-pdf/route": "/api/generate-pdf"
+}
