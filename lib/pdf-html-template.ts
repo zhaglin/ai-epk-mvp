@@ -18,32 +18,11 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EPK - ${name}</title>
   
-  <!-- Предзагрузка шрифтов для быстрого рендера -->
-  <link rel="preload" href="${baseUrl}/fonts/NotoSans-Regular.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="preload" href="${baseUrl}/fonts/NotoSans-Bold.ttf" as="font" type="font/ttf" crossorigin>
-  
   <style>
-    /* Регистрация кириллических шрифтов */
-    @font-face {
-      font-family: 'Noto Sans';
-      src: url('${baseUrl}/fonts/NotoSans-Regular.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
-      unicode-range: U+0400-04FF, U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-    }
-    
-    @font-face {
-      font-family: 'Noto Sans';
-      src: url('${baseUrl}/fonts/NotoSans-Bold.ttf') format('truetype');
-      font-weight: 700;
-      font-style: normal;
-      unicode-range: U+0400-04FF, U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-    }
-    
     /* Настройка страницы для PDF */
     @page {
       size: A4;
-      margin: 24mm;
+      margin: 15mm;
     }
     
     * {
@@ -53,10 +32,10 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     }
     
     body {
-      font-family: "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-      font-size: 14px;
+      font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+      font-size: 13px;
       line-height: 1.6;
-      color: #333;
+      color: #1f2937;
       background: white;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -65,16 +44,16 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     .container {
       max-width: 100%;
       margin: 0 auto;
+      position: relative;
     }
     
-    /* Header с градиентом и логотипом */
+    /* Header с градиентом */
     .header {
       background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
       color: white;
-      padding: 24px 24px;
+      padding: 30px 0;
       text-align: center;
-      margin: -24mm -24mm 20px -24mm;
-      border-radius: 0;
+      margin: -15mm -15mm 30px -15mm;
       position: relative;
       overflow: hidden;
     }
@@ -93,72 +72,107 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     .header-content {
       position: relative;
       z-index: 1;
+      padding: 0 20px;
     }
     
     .logo {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 18px;
+      margin-bottom: 20px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 1px;
     }
     
     .logo-icon {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       background: white;
-      border-radius: 8px;
-      margin-right: 12px;
+      border-radius: 6px;
+      margin-right: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 900;
       color: #3b82f6;
     }
     
     .header h1 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 700;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       letter-spacing: -0.5px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .header .subtitle {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 400;
       opacity: 0.95;
     }
     
-    /* Artist Photo */
+    /* Основной контент с фото и текстом */
+    .main-content {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+    
+    /* Фото артиста */
+    .photo-section {
+      flex: 0 0 200px;
+    }
+    
     .artist-photo {
-      width: 180px;
-      height: 180px;
-      border-radius: 12px;
-      margin: 0 auto 24px auto;
-      display: block;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      width: 200px;
+      height: 200px;
+      border-radius: 16px;
       object-fit: cover;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      border: 3px solid white;
+    }
+    
+    /* Контент справа от фото */
+    .content-section {
+      flex: 1;
+      padding-top: 10px;
     }
     
     /* Секции контента */
     .section {
-      margin-bottom: 18px;
-      padding: 16px 20px;
+      margin-bottom: 25px;
+      padding: 20px 24px;
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border-radius: 12px;
-      border-left: 4px solid #3b82f6;
+      border-radius: 16px;
+      border-left: 5px solid #3b82f6;
       page-break-inside: avoid;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+    
+    .section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+      border-radius: 16px;
+      z-index: 0;
+    }
+    
+    .section > * {
+      position: relative;
+      z-index: 1;
     }
     
     .section h2 {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 700;
       color: #1e3a8a;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       display: flex;
@@ -167,17 +181,17 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     
     .section h2::before {
       content: '';
-      width: 4px;
-      height: 16px;
+      width: 5px;
+      height: 20px;
       background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-      border-radius: 2px;
-      margin-right: 8px;
+      border-radius: 3px;
+      margin-right: 10px;
     }
     
     .section p {
-      font-size: 13px;
-      line-height: 1.6;
-      margin-bottom: 6px;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 8px;
       text-align: justify;
       color: #374151;
     }
@@ -189,19 +203,23 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     }
     
     .highlights li {
-      padding: 8px 0;
-      border-bottom: 1px solid #e2e8f0;
-      font-size: 13px;
-      line-height: 1.5;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      line-height: 1.6;
       color: #374151;
+      position: relative;
+      padding-left: 25px;
     }
     
     .highlights li:before {
-      content: "✦ ";
+      content: "✦";
       color: #3b82f6;
       font-weight: bold;
-      margin-right: 8px;
-      font-size: 14px;
+      position: absolute;
+      left: 0;
+      top: 10px;
+      font-size: 16px;
     }
     
     .highlights li:last-child {
@@ -210,49 +228,77 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     
     /* Links */
     .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
     }
     
     .link-item {
       display: inline-block;
-      padding: 6px 12px;
+      padding: 10px 16px;
       background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
       color: #0369a1;
       text-decoration: none;
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 500;
       border: 1px solid #bae6fd;
+      transition: all 0.2s ease;
     }
     
     /* Footer */
     .footer {
       text-align: center;
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid #e2e8f0;
-      color: #64748b;
-      font-size: 11px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 12px;
+      position: relative;
     }
     
-    /* Watermark (скрытый) */
+    .footer::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    }
+    
+    /* Watermark */
     .watermark {
       position: fixed;
-      bottom: 5mm;
-      right: 5mm;
-      font-size: 8px;
-      color: #cbd5e1;
-      opacity: 0.3;
+      bottom: 10mm;
+      right: 10mm;
+      font-size: 9px;
+      color: #d1d5db;
+      opacity: 0.4;
+      font-weight: 500;
+    }
+    
+    /* Адаптивность для PDF */
+    @media print {
+      .main-content {
+        display: flex !important;
+        gap: 25px !important;
+      }
+      
+      .photo-section {
+        flex: 0 0 180px !important;
+      }
+      
+      .artist-photo {
+        width: 180px !important;
+        height: 180px !important;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Artist Photo -->
-    ${photoUrl ? `<img src="${baseUrl}${photoUrl}" alt="${name}" class="artist-photo" />` : ''}
-    
     <!-- Header -->
     <div class="header">
       <div class="header-content">
@@ -265,16 +311,27 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
       </div>
     </div>
     
-    <!-- Краткая презентация -->
-    <div class="section">
-      <h2>Краткая презентация</h2>
-      <p>${generated.pitch}</p>
-    </div>
-    
-    <!-- Биография -->
-    <div class="section">
-      <h2>Биография</h2>
-      <p>${generated.bio}</p>
+    <!-- Основной контент -->
+    <div class="main-content">
+      <!-- Фото артиста -->
+      <div class="photo-section">
+        ${photoUrl ? `<img src="${baseUrl}${photoUrl}" alt="${name}" class="artist-photo" />` : '<div class="artist-photo" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 14px;">Нет фото</div>'}
+      </div>
+      
+      <!-- Контент справа -->
+      <div class="content-section">
+        <!-- Краткая презентация -->
+        <div class="section">
+          <h2>Краткая презентация</h2>
+          <p>${generated.pitch}</p>
+        </div>
+        
+        <!-- Биография -->
+        <div class="section">
+          <h2>Биография</h2>
+          <p>${generated.bio}</p>
+        </div>
+      </div>
     </div>
     
     <!-- Ключевые достижения -->
