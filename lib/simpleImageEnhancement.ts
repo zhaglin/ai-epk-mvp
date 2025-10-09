@@ -45,7 +45,6 @@ export async function enhanceImageSimple(imageBuffer: Buffer): Promise<Buffer> {
  * Проверяет, нужно ли использовать простое улучшение вместо AI
  */
 export function shouldUseSimpleEnhancement(): boolean {
-  // Используем AI модели для лучшего качества
-  // Вернуть true только если AI недоступен или для тестирования
+  // ОТКЛЮЧЕНО: Используем только AI модели
   return false;
 }
