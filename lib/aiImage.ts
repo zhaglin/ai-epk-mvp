@@ -97,10 +97,10 @@ export async function enhanceArtistPortraitPro(
     const faceRestored = await replicate.run(CODEFORMER_MODEL, {
       input: {
         image: file.url,
-        codeformer_fidelity: 0.95, // Максимальная точность лица
-        background_enhance: true,
-        face_upsample: true,
         upscale: 2,
+        face_upsample: true,
+        background_enhance: true,
+        codeformer_fidelity: 0.9,
       }
     });
     
@@ -200,7 +200,7 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
     console.log('[AI Image] File uploaded to Replicate:', file.id);
     
     // Запускаем Real-ESRGAN для улучшения качества изображения
-    const output = await replicate.run(PORTRAIT_MODEL, {
+    const output = await replicate.run(REAL_ESRGAN_MODEL, {
       input: {
         image: file.url,
         scale: 2, // Увеличиваем разрешение в 2 раза
@@ -292,13 +292,13 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
       contentType: 'image/jpeg'
     });
     
-    const output = await replicate.run(FACE_ENHANCEMENT_MODEL, {
+    const output = await replicate.run(CODEFORMER_MODEL, {
       input: {
         image: file.url,
-        codeformer_fidelity: 0.9, // Высокая точность сохранения лица
-        background_enhance: true, // Улучшение фона
-        face_upsample: true, // Улучшение разрешения лица
         upscale: 2, // Увеличение разрешения в 2 раза
+        face_upsample: true, // Улучшение разрешения лица
+        background_enhance: true, // Улучшение фона
+        codeformer_fidelity: 0.9, // Высокая точность сохранения лица
       }
     });
     
