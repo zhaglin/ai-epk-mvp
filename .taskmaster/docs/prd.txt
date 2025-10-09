@@ -1,0 +1,319 @@
+<context>
+# Overview
+AI-EPK (Electronic Press Kit) — это MVP-сервис для артистов (диджеев, лайв-музыкантов), который автоматически генерирует профессиональное BIO артиста с помощью GPT на основе введённых данных и сохраняет результат в PDF-формате для использования в промо-материалах, букингах и презентациях.
+
+**Проблема:** Артистам нужно регулярно создавать и обновлять EPK (электронный пресс-кит) с профессиональным описанием, но написание качественного BIO требует времени и навыков копирайтинга.
+
+**Решение:** Артист заполняет структурированную форму (имя, город, жанры, опыт, достижения, ссылки), система генерирует через GPT качественное BIO на русском языке и упаковывает всё в готовый PDF для скачивания.
+
+**Ценность:** Экономия времени, профессиональное качество текста, готовый документ для отправки организаторам и промоутерам.
+
+# Core Features
+
+## 1. Форма ввода данных артиста
+- **Что делает:** Собирает структурированную информацию об артисте через веб-форму
+- **Почему важно:** Без качественных входных данных невозможно создать релевантное BIO
+- **Как работает:** 
+  - Поля: имя артиста, город, жанры, места выступлений, стиль/подход, навыки, достижения, ссылки (соцсети, SoundCloud, Mixcloud)
+  - Валидация обязательных полей
+  - Чистый минималистичный UI
+
+## 2. AI-генерация BIO через GPT
+- **Что делает:** Создаёт профессиональное описание артиста на основе введённых данных
+- **Почему важно:** Это core-функция продукта — автоматизация создания качественного текста
+- **Как работает:**
+  - API-вызов к GPT с structured prompt
+  - Генерация трёх блоков: elevator pitch, full BIO, highlights
+  - Возврат JSON с готовыми текстами на русском языке
+
+## 3. Генерация PDF-документа
+- **Что делает:** Создаёт готовый к использованию PDF с BIO и всей информацией
+- **Почему важно:** Артисту нужен финальный документ для отправки организаторам
+- **Как работает:**
+  - Макет с секциями: имя, город, жанры, pitch, bio, highlights, ссылки, дата создания
+  - Поддержка кириллицы
+  - Кнопка "Скачать PDF" на фронтенде
+
+# User Experience
+
+## User Persona
+**Никита, 28 лет, диджей**
+- Играет техно и хаус в клубах Москвы и Питера
+- Нужен EPK для заявок на фестивали и букинг за границей
+- Нет времени и навыков писать профессиональное BIO
+- Хочет быстро получить готовый документ
+
+## Key User Flow
+1. Заходит на лендинг AI-EPK
+2. Видит форму с полями для заполнения
+3. Вводит свои данные (имя, жанры, достижения и т.д.)
+4. Нажимает кнопку "Сгенерировать BIO"
+5. Видит сгенерированный текст на странице (elevator pitch, full BIO, highlights)
+6. Нажимает "Скачать PDF"
+7. Получает готовый EPK-документ
+
+## UI/UX Considerations
+- Минималистичный дизайн (TailwindCSS)
+- Понятные лейблы полей на русском
+- Индикатор загрузки при генерации (может занять 5-10 секунд)
+- Четкая визуализация результата перед скачиванием PDF
+- Мобильная адаптивность (optional для MVP)
+
+</context>
+<PRD>
+# Technical Architecture
+
+## Stack
+- **Frontend:** Next.js 14 (App Router), React, TypeScript, TailwindCSS
+- **Backend:** Next.js API Routes (serverless)
+- **AI:** OpenAI GPT-4 (через API)
+- **PDF:** библиотека для генерации PDF (например, jsPDF или Puppeteer)
+- **Deploy:** Vercel (стандарт для Next.js)
+
+## System Components
+
+### 1. Frontend (Next.js App Router)
+- **Landing Page (`app/page.tsx`):**
+  - Форма с полями ArtistInput
+  - Обработка submit → вызов API `/api/generate-bio`
+  - Отображение результата (GeneratedBio)
+  - Кнопка "Скачать PDF" → вызов API `/api/generate-pdf`
+
+### 2. Backend API Routes
+- **`/api/generate-bio` (POST):**
+  - Принимает ArtistInput
+  - Формирует prompt для GPT
+  - Вызывает OpenAI API
+  - Возвращает JSON с pitch, bio, highlights
+  
+- **`/api/generate-pdf` (POST):**
+  - Принимает ArtistInput + GeneratedBio
+  - Генерирует PDF с макетом
+  - Возвращает файл для скачивания
+
+### 3. AI Integration (OpenAI GPT-4)
+- System prompt: "Ты профессиональный музыкальный копирайтер..."
+- User prompt: структурированные данные артиста
+- Response format: JSON с тремя блоками текста
+- Error handling: retry logic, fallback messages
+
+### 4. PDF Generation
+- Layout: заголовок (имя), секции (город, жанры, pitch, bio, highlights, links)
+- Fonts: поддержка кириллицы
+- Формат: A4, профессиональный вид
+- Output: downloadable file
+
+## Data Models
+
+### ArtistInput (TypeScript interface)
+```typescript
+interface ArtistInput {
+  name: string;              // Имя артиста
+  city: string;              // Город
+  genres: string[];          // Жанры (массив)
+  venues: string;            // Где играл (текст)
+  style: string;             // Стиль/подход
+  skills: string;            // Навыки (микс, продакшн и т.д.)
+  achievements: string;      // Достижения
+  links: {
+    instagram?: string;
+    soundcloud?: string;
+    mixcloud?: string;
+    website?: string;
+  };
+}
+```
+
+### GeneratedBio (TypeScript interface)
+```typescript
+interface GeneratedBio {
+  pitch: string;       // Elevator pitch (2-3 предложения)
+  bio: string;         // Full BIO (1 абзац)
+  highlights: string[]; // Key highlights (список из 3-5 пунктов)
+}
+```
+
+## APIs and Integrations
+- **OpenAI API:** GPT-4 для генерации текста
+- **Environment Variables:** `OPENAI_API_KEY` в `.env.local`
+- **Rate Limiting:** пока не требуется (MVP)
+
+## Infrastructure Requirements
+- **Vercel deployment:** автоматический deploy из GitHub
+- **Environment secrets:** API ключ OpenAI через Vercel dashboard
+- **Функции:** Serverless Functions для API routes
+
+# Development Roadmap
+
+## MVP Requirements (Must Have)
+1. **Форма ввода данных:**
+   - Все поля ArtistInput
+   - Базовая валидация (required fields)
+   - Submit handler
+
+2. **AI-генерация BIO:**
+   - API route `/api/generate-bio`
+   - GPT prompt engineering
+   - Корректный JSON response
+
+3. **Отображение результата:**
+   - Вывод pitch, bio, highlights на странице
+   - Понятная визуализация
+
+4. **PDF-генерация:**
+   - API route `/api/generate-pdf`
+   - Макет с кириллицей
+   - Download functionality
+
+5. **End-to-End flow:**
+   - Форма → GPT → Результат → PDF
+   - Без критических багов
+   - Базовый error handling
+
+## Future Enhancements (Post-MVP)
+- Редактирование сгенерированного BIO перед скачиванием
+- Несколько вариантов BIO (короткий/длинный)
+- Загрузка фото артиста в PDF
+- Сохранение EPK в базу данных (user accounts)
+- Шаринг EPK через ссылку
+- Англоязычная версия BIO
+- Кастомизация дизайна PDF
+
+# Logical Dependency Chain
+
+## Phase 1: Foundation (базовая инфраструктура)
+1. **Инициализация проекта:**
+   - Создать Next.js проект (уже сделано)
+   - Настроить TypeScript, TailwindCSS
+   - Настроить Task-Master-AI и Context7
+   - Зафиксировать DECISION-001 (архитектура, стек)
+
+2. **Определить типы данных:**
+   - Создать `types/index.ts` с ArtistInput и GeneratedBio
+   - Зафиксировать в Context7 структуру данных
+
+## Phase 2: Frontend Form (быстрый видимый результат)
+3. **Создать форму ввода:**
+   - Компонент `components/ArtistForm.tsx`
+   - Все поля из ArtistInput
+   - Базовая валидация
+   - TailwindCSS стилизация
+
+4. **Landing page:**
+   - Интеграция формы в `app/page.tsx`
+   - Заголовок, описание сервиса
+   - UI/UX полировка
+
+## Phase 3: AI Integration (core функционал)
+5. **GPT Prompt Engineering:**
+   - Создать prompt specification
+   - Зафиксировать PROMPT-SPEC-001 в Context7
+   - Определить структуру system/user prompts
+
+6. **API Route: generate-bio:**
+   - Создать `/api/generate-bio/route.ts`
+   - Реализовать вызов OpenAI API
+   - Error handling и валидация response
+   - Вернуть JSON с GeneratedBio
+
+7. **Связать форму с API:**
+   - Submit handler вызывает `/api/generate-bio`
+   - Loading state при генерации
+   - Отображение результата на странице
+
+## Phase 4: PDF Generation
+8. **Определить PDF Layout:**
+   - Зафиксировать PDF-SPEC-001 в Context7
+   - Секции: имя, город, жанры, pitch, bio, highlights, links, дата
+   - Дизайн макета
+
+9. **API Route: generate-pdf:**
+   - Создать `/api/generate-pdf/route.ts`
+   - Реализовать генерацию PDF
+   - Поддержка кириллицы
+   - Вернуть файл для скачивания
+
+10. **Кнопка "Скачать PDF":**
+    - Добавить UI элемент после генерации BIO
+    - Вызов `/api/generate-pdf` с данными
+    - Download handling
+
+## Phase 5: Testing & Finalization
+11. **End-to-End тестирование:**
+    - Проверить полный flow: форма → GPT → результат → PDF
+    - Тестирование кириллицы в PDF
+    - Проверка различных входных данных
+
+12. **Definition of Done (DoD):**
+    - Зафиксировать DOD-MVP-001 в Context7
+    - Критерии готовности MVP
+    - Чеклист финальной проверки
+
+13. **Документация:**
+    - README.md с описанием проекта
+    - Инструкции по установке и деплою
+    - Environment variables setup
+
+# Risks and Mitigations
+
+## Technical Challenges
+
+### 1. OpenAI API Rate Limits / Costs
+- **Риск:** Превышение лимитов или высокие затраты
+- **Митигация:** 
+  - Использовать GPT-4o-mini для MVP (дешевле)
+  - Добавить базовый rate limiting на фронте
+  - Мониторинг usage через OpenAI dashboard
+
+### 2. PDF Кириллица
+- **Риск:** Проблемы с отображением русских букв в PDF
+- **Митигация:**
+  - Использовать проверенные библиотеки (Puppeteer или react-pdf)
+  - Тестировать на ранней стадии
+  - Fallback на embedded fonts
+
+### 3. GPT Response Quality
+- **Риск:** AI генерирует некачественные или нерелевантные тексты
+- **Митигация:**
+  - Качественный prompt engineering
+  - Итеративное улучшение prompts
+  - Возможность пользователю повторить генерацию
+
+## MVP Scope Control
+- **Риск:** Feature creep, раздувание скоупа MVP
+- **Митигация:**
+  - Чёткое определение Must Have vs Nice to Have
+  - Фокус на минимальном работающем flow
+  - Использование Task-Master для отслеживания scope
+
+## Resource Constraints
+- **Риск:** Нехватка времени или технических навыков
+- **Митигация:**
+  - Работа через короткие итерации (вайбкодинг)
+  - Приоритизация критичных фич
+  - Использование готовых библиотек (не изобретаем велосипед)
+
+# Appendix
+
+## Context7 Records (заведутся в процессе)
+- **DECISION-001:** Architecture, Stack, Data Format
+- **PROMPT-SPEC-001:** GPT System + User Prompt Structure
+- **PDF-SPEC-001:** PDF Layout and Fields
+- **DOD-MVP-001:** Definition of Done for MVP
+
+## Environment Variables
+```
+OPENAI_API_KEY=sk-...
+```
+
+## Suggested Libraries
+- **PDF Generation:** Puppeteer, jsPDF, или react-pdf
+- **Form Handling:** React Hook Form (optional для MVP)
+- **UI Components:** TailwindCSS + Headless UI (optional)
+
+## Research Notes
+- OpenAI GPT-4o-mini: ~$0.15 per 1M input tokens (доступно для MVP)
+- Puppeteer: поддержка кириллицы out-of-the-box
+- Vercel Serverless Functions: 10s timeout (достаточно для GPT вызова)
+
+</PRD>
