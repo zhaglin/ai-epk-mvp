@@ -7,12 +7,12 @@ const replicate = new Replicate({
 
 // Промпт для художественной обработки портретов
 export const ARTIST_PORTRAIT_PROMPT = `
-Professional artist portrait with dramatic editorial lighting and cinematic atmosphere. 
-Enhance with subtle artistic effects: soft color grading with blue/purple tones, 
-gentle rim lighting, and sophisticated shadows. 
-Add modern music industry aesthetic - clean, stylish, professional.
-Keep natural facial features and expression, maintain original pose and gender.
-High quality studio photography, magazine cover style, subtle artistic enhancement.
+Professional artist portrait with subtle enhancement only.
+Very minimal changes: slightly improve lighting, add gentle warmth or cool tone, 
+enhance sharpness and contrast very softly.
+Keep everything natural - no dramatic effects, no strong color grading, no filters.
+Clean, professional, modern aesthetic with barely visible improvements.
+High quality photography with minimal artistic touch - looks natural, not processed.
 `;
 
 // Модель Stable Diffusion для портретов
@@ -51,9 +51,9 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
       input: {
         prompt: ARTIST_PORTRAIT_PROMPT,
         image: file.url,
-        num_inference_steps: 25,
-        guidance_scale: 8.5, // Более сильное следование промпту
-        strength: 0.8, // Увеличенная обработка для заметных изменений
+        num_inference_steps: 15,
+        guidance_scale: 5.0, // Минимальное следование промпту - больше похоже на оригинал
+        strength: 0.3, // Очень слабая обработка - только тонкие улучшения
         scheduler: "K_EULER",
       }
     });
@@ -99,11 +99,11 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
     
     const output = await replicate.run(ALTERNATIVE_MODEL, {
       input: {
-        prompt: "Professional music artist portrait with dramatic lighting, cinematic atmosphere, blue and purple color grading, stylish and modern aesthetic, high quality studio photography",
+        prompt: "Professional portrait with minimal enhancement, natural lighting, subtle improvements only, clean and modern style",
         image: file.url,
-        num_inference_steps: 20,
-        guidance_scale: 7.0,
-        strength: 0.7,
+        num_inference_steps: 12,
+        guidance_scale: 4.5,
+        strength: 0.35, // Очень тонкая обработка
         scheduler: "K_EULER",
       }
     });
@@ -129,44 +129,44 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
 }
 
 /**
- * Драматичная обработка портрета с заметными эффектами
+ * Тонкая обработка портрета с минимальными изменениями
  */
 export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
   const startTime = Date.now();
   
   try {
-    console.log('[AI Image] Starting dramatic portrait enhancement...');
+    console.log('[AI Image] Starting subtle portrait enhancement...');
     
     const file = await replicate.files.create(imageBuffer, {
       contentType: 'image/jpeg'
     });
     
-    const dramaticPrompt = `
-    Professional music artist portrait with bold cinematic lighting, 
-    dramatic shadows and highlights, artistic color grading with deep blues and purples, 
-    modern studio photography with dramatic atmosphere, stylish and sophisticated,
-    magazine cover quality, artistic enhancement with visible but tasteful effects.
-    Maintain natural facial features, preserve original pose and gender.
+    const subtlePrompt = `
+    Professional portrait with very subtle improvements.
+    Minimal enhancement: slightly better lighting, gentle sharpness, soft color balance.
+    No dramatic effects, no strong filters, no obvious changes.
+    Natural, clean, professional look - barely noticeable improvements.
+    Keep original atmosphere and style completely intact.
     `;
     
     const output = await replicate.run(PORTRAIT_MODEL, {
       input: {
-        prompt: dramaticPrompt,
+        prompt: subtlePrompt,
         image: file.url,
-        num_inference_steps: 30,
-        guidance_scale: 9.0, // Максимальное следование промпту
-        strength: 0.85, // Сильная обработка для заметных эффектов
+        num_inference_steps: 12,
+        guidance_scale: 4.0, // Очень слабое следование промпту
+        strength: 0.25, // Минимальная обработка
         scheduler: "K_EULER",
       }
     });
     
     const processingTime = Date.now() - startTime;
-    console.log('[AI Image] Dramatic enhancement completed in', processingTime, 'ms');
+    console.log('[AI Image] Subtle enhancement completed in', processingTime, 'ms');
     
     const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
     
     if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
-      throw new Error('Invalid output from dramatic AI model');
+      throw new Error('Invalid output from subtle AI model');
     }
     
     return {
@@ -176,11 +176,11 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
     };
     
   } catch (error) {
-    console.error('[AI Image] Dramatic enhancement failed:', error);
+    console.error('[AI Image] Subtle enhancement failed:', error);
     
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Dramatic enhancement failed'
+      error: error instanceof Error ? error.message : 'Subtle enhancement failed'
     };
   }
 }
