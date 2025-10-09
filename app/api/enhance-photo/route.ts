@@ -3,6 +3,7 @@ import { readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { enhanceArtistPortrait, enhanceArtistPortraitFallback, enhanceArtistPortraitDramatic, validateImage } from '@/lib/aiImage';
+import { enhanceImageSimple, shouldUseSimpleEnhancement } from '@/lib/simpleImageEnhancement';
 import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
@@ -39,50 +40,57 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('[Enhance] Image validated, starting AI processing...');
+           console.log('[Enhance] Image validated, starting processing...');
+           
+           let enhancedBuffer: Buffer;
+           let processingTime = 0;
+           
+           // Проверяем, использовать ли простое улучшение
+           if (shouldUseSimpleEnhancement()) {
+             console.log('[Enhance] Using simple enhancement (no AI changes)...');
+             const startTime = Date.now();
+             enhancedBuffer = await enhanceImageSimple(imageBuffer);
+             processingTime = Date.now() - startTime;
+             console.log('[Enhance] Simple enhancement completed in', processingTime, 'ms');
+           } else {
+             // Пытаемся улучшить изображение с помощью AI (тонкая обработка)
+             let result = await enhanceArtistPortraitDramatic(imageBuffer);
+             
+             // Если тонкая модель не сработала, пробуем обычную
+             if (!result.success) {
+               console.log('[Enhance] Dramatic model failed, trying standard...');
+               result = await enhanceArtistPortrait(imageBuffer);
+             }
+             
+             // Если и обычная не сработала, пробуем fallback
+             if (!result.success) {
+               console.log('[Enhance] Standard model failed, trying fallback...');
+               result = await enhanceArtistPortraitFallback(imageBuffer);
+             }
+             
+             if (!result.success) {
+               console.error('[Enhance] All AI models failed, falling back to simple enhancement');
+               
+               // Fallback к простому улучшению
+               const startTime = Date.now();
+               enhancedBuffer = await enhanceImageSimple(imageBuffer);
+               processingTime = Date.now() - startTime;
+             } else {
+               // Скачиваем улучшенное изображение от AI
+               console.log('[Enhance] Downloading AI enhanced image from:', result.enhancedImageUrl);
+               
+               const enhancedResponse = await fetch(result.enhancedImageUrl!);
+               if (!enhancedResponse.ok) {
+                 throw new Error('Failed to download enhanced image');
+               }
+               
+               enhancedBuffer = Buffer.from(await enhancedResponse.arrayBuffer());
+               processingTime = result.processingTime || 0;
+             }
+           }
     
-    // Пытаемся улучшить изображение с помощью AI (драматичная обработка)
-    let result = await enhanceArtistPortraitDramatic(imageBuffer);
-    
-    // Если драматичная модель не сработала, пробуем обычную
-    if (!result.success) {
-      console.log('[Enhance] Dramatic model failed, trying standard...');
-      result = await enhanceArtistPortrait(imageBuffer);
-    }
-    
-    // Если и обычная не сработала, пробуем fallback
-    if (!result.success) {
-      console.log('[Enhance] Standard model failed, trying fallback...');
-      result = await enhanceArtistPortraitFallback(imageBuffer);
-    }
-    
-    if (!result.success) {
-      console.error('[Enhance] All AI models failed:', result.error);
-      
-      // Возвращаем ошибку, но не удаляем оригинальный файл
-      return NextResponse.json({
-        success: false,
-        error: 'AI enhancement failed. Using original photo.',
-        fallback: true
-      }, { status: 200 }); // 200 чтобы фронтенд мог обработать fallback
-    }
-    
-    // Скачиваем улучшенное изображение
-    console.log('[Enhance] Downloading enhanced image from:', result.enhancedImageUrl);
-    
-    const enhancedResponse = await fetch(result.enhancedImageUrl!);
-    if (!enhancedResponse.ok) {
-      throw new Error('Failed to download enhanced image');
-    }
-    
-    const enhancedBuffer = Buffer.from(await enhancedResponse.arrayBuffer());
-    
-    // Оптимизируем и сохраняем улучшенное изображение
+    // Дополнительная оптимизация уже обработанного изображения
     const optimizedBuffer = await sharp(enhancedBuffer)
-      .resize(1024, 1024, { 
-        fit: 'inside',
-        withoutEnlargement: true 
-      })
       .jpeg({ quality: 90 })
       .toBuffer();
     
@@ -110,13 +118,13 @@ export async function POST(request: NextRequest) {
       console.warn('[Enhance] Failed to delete temporary file:', deleteError);
     }
     
-    return NextResponse.json({
-      success: true,
-      enhancedUrl,
-      fileName: finalFileName,
-      processingTime: result.processingTime,
-      message: 'Photo enhanced successfully!'
-    });
+           return NextResponse.json({
+             success: true,
+             enhancedUrl,
+             fileName: finalFileName,
+             processingTime: processingTime,
+             message: 'Photo enhanced successfully!'
+           });
     
   } catch (error) {
     console.error('[Enhance] Error during enhancement:', error);

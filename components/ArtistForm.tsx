@@ -219,7 +219,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
           Фото артиста <span className="text-gray-500">(необязательно)</span>
         </label>
              <p className="text-sm text-gray-500 mb-4">
-               Загрузите портрет или промо-фото — AI улучшит только качество (свет, контраст), сохранив ваш облик
+               Загрузите портрет или промо-фото — улучшим качество изображения (свет, контраст, четкость), сохранив ваш облик на 100%
              </p>
         
         {!photoState.file ? (
