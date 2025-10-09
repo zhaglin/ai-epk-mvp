@@ -148,6 +148,20 @@ export default function Home() {
             <>
               {/* Generated Bio Result */}
               <div className="space-y-8">
+                {/* Artist Photo Hero Section */}
+                {(artistInput as any)?.photoUrl && (
+                  <div className="text-center relative">
+                    <img
+                      src={(artistInput as any).photoUrl}
+                      alt={artistInput?.name}
+                      className="w-full max-w-md mx-auto h-80 object-cover rounded-2xl shadow-2xl"
+                    />
+                    <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      ✨ AI Enhanced
+                    </div>
+                  </div>
+                )}
+                
                 {/* Artist Header */}
                 <div className="border-b pb-6">
                   <h2 className="text-3xl font-bold text-gray-900">{artistInput?.name}</h2>
