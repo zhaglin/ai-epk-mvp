@@ -34,14 +34,14 @@ export async function POST(request: NextRequest) {
 
     // 4. Вызов OpenAI API
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o', // Используем более продвинутую модель
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ],
       response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: 0.9, // Увеличиваем креативность
+      max_tokens: 1500, // Увеличиваем лимит для более детальных текстов
     });
 
     // 5. Извлечение ответа
