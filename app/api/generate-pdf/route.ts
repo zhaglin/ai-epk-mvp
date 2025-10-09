@@ -23,9 +23,17 @@ export async function POST(request: NextRequest) {
     // Генерируем PDF элемент
     const pdfElement = React.createElement(EPKDocument, { data: artistData });
     
-    console.log('Rendering PDF to buffer...');
-    // Используем renderToBuffer вместо renderToStream для простоты
-    const pdfBuffer = await ReactPDF.renderToBuffer(pdfElement as any);
+    console.log('Rendering PDF to stream...');
+    // Используем правильный API - renderToStream
+    const stream = await ReactPDF.renderToStream(pdfElement as any);
+    
+    console.log('Converting stream to buffer...');
+    // Конвертируем stream в buffer
+    const chunks: any[] = [];
+    for await (const chunk of stream as any) {
+      chunks.push(chunk);
+    }
+    const pdfBuffer = Buffer.concat(chunks);
     
     console.log('PDF buffer created, size:', pdfBuffer.length);
 
