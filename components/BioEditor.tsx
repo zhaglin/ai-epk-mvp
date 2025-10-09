@@ -59,7 +59,8 @@ export default function BioEditor({ initialBio, onSave, onCancel }: BioEditorPro
           value={editedBio.pitch}
           onChange={(e) => setEditedBio({ ...editedBio, pitch: e.target.value })}
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none text-gray-900 placeholder-gray-400 bg-white"
+          placeholder="Введите elevator pitch..."
         />
         <p className="mt-1 text-xs text-gray-500">2-3 предложения о ключевых моментах</p>
       </div>
@@ -74,7 +75,8 @@ export default function BioEditor({ initialBio, onSave, onCancel }: BioEditorPro
           value={editedBio.bio}
           onChange={(e) => setEditedBio({ ...editedBio, bio: e.target.value })}
           rows={6}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none text-gray-900 placeholder-gray-400 bg-white"
+          placeholder="Введите полное bio..."
         />
         <p className="mt-1 text-xs text-gray-500">Полное описание артиста</p>
       </div>
@@ -97,7 +99,7 @@ export default function BioEditor({ initialBio, onSave, onCancel }: BioEditorPro
                       if (e.key === 'Escape') setEditingHighlightIndex(null);
                     }}
                     autoFocus
-                    className="flex-1 px-3 py-2 border border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border-2 border-blue-500 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   />
                 </>
               ) : (
@@ -135,7 +137,7 @@ export default function BioEditor({ initialBio, onSave, onCancel }: BioEditorPro
                 if (e.key === 'Enter') handleAddHighlight();
               }}
               placeholder="Добавить новый highlight..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-400 bg-white"
             />
             <button
               onClick={handleAddHighlight}
