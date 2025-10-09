@@ -157,7 +157,10 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fileId: uploadData.fileId }),
+        body: JSON.stringify({ 
+          fileId: uploadData.fileId,
+          fileName: uploadData.fileName 
+        }),
       });
 
       const enhanceData = await enhanceResponse.json();

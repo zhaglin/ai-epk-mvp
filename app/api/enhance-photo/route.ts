@@ -8,19 +8,20 @@ import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
   try {
-    const { fileId } = await request.json();
+    const { fileId, fileName } = await request.json();
     
-    if (!fileId) {
+    if (!fileId && !fileName) {
       return NextResponse.json(
-        { error: 'File ID is required' },
+        { error: 'File ID or file name is required' },
         { status: 400 }
       );
     }
     
-    console.log('[Enhance] Starting AI enhancement for file:', fileId);
+    const actualFileName = fileName || `${fileId}.jpg`;
+    console.log('[Enhance] Starting AI enhancement for file:', actualFileName);
     
     // Читаем временный файл
-    const tempFilePath = join(process.cwd(), 'tmp', 'uploads', `${fileId}.jpg`);
+    const tempFilePath = join(process.cwd(), 'tmp', 'uploads', actualFileName);
     
     if (!existsSync(tempFilePath)) {
       return NextResponse.json(
