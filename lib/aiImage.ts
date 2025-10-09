@@ -7,14 +7,19 @@ const replicate = new Replicate({
 
 // Промпт для художественной обработки портретов
 export const ARTIST_PORTRAIT_PROMPT = `
-Artist portrait, editorial lighting, soft contrast, cinematic color grading. 
-Preserve natural facial features and expression, add modern musical visual style (house/techno aesthetic). 
-Maintain original pose and gender, enhance with artistic atmosphere and professional photography feel.
-High quality, detailed, studio lighting, magazine cover style.
+Professional artist portrait with dramatic editorial lighting and cinematic atmosphere. 
+Enhance with subtle artistic effects: soft color grading with blue/purple tones, 
+gentle rim lighting, and sophisticated shadows. 
+Add modern music industry aesthetic - clean, stylish, professional.
+Keep natural facial features and expression, maintain original pose and gender.
+High quality studio photography, magazine cover style, subtle artistic enhancement.
 `;
 
 // Модель Stable Diffusion для портретов
 const PORTRAIT_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
+
+// Альтернативная модель для более заметных эффектов
+const ALTERNATIVE_MODEL = "black-forest-labs/flux-schnell:de9f05b6070d8a8c7c347e8d6b3d3b3b3b3b3b3b";
 
 export interface ImageEnhancementResult {
   success: boolean;
@@ -46,11 +51,12 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
       input: {
         prompt: ARTIST_PORTRAIT_PROMPT,
         image: file.url,
-        num_inference_steps: 20,
-        guidance_scale: 7.5,
-        strength: 0.7, // Умеренная обработка, сохраняем оригинал
+        num_inference_steps: 25,
+        guidance_scale: 8.5, // Более сильное следование промпту
+        strength: 0.8, // Увеличенная обработка для заметных изменений
         scheduler: "K_EULER",
         seed: null, // Случайный seed для разнообразия
+        style: "enhanced", // Дополнительный стиль
       }
     });
     
@@ -89,17 +95,17 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
   try {
     console.log('[AI Image] Trying fallback model...');
     
-    // Используем другую модель как fallback
-    const fallbackModel = "black-forest-labs/flux-schnell:de9f05b6070d8a8c7c347e8d6b3d3b3b3b3b3b3b";
-    
     const file = await replicate.files.create(imageBuffer, {
       contentType: 'image/jpeg'
     });
     
-    const output = await replicate.run(fallbackModel, {
+    const output = await replicate.run(ALTERNATIVE_MODEL, {
       input: {
-        prompt: "professional portrait, studio lighting, high quality",
+        prompt: "Professional music artist portrait with dramatic lighting, cinematic atmosphere, blue and purple color grading, stylish and modern aesthetic, high quality studio photography",
         image: file.url,
+        num_inference_steps: 20,
+        guidance_scale: 7.0,
+        strength: 0.75,
       }
     });
     
@@ -119,6 +125,64 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Fallback model failed'
+    };
+  }
+}
+
+/**
+ * Драматичная обработка портрета с заметными эффектами
+ */
+export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
+  const startTime = Date.now();
+  
+  try {
+    console.log('[AI Image] Starting dramatic portrait enhancement...');
+    
+    const file = await replicate.files.create(imageBuffer, {
+      contentType: 'image/jpeg'
+    });
+    
+    const dramaticPrompt = `
+    Professional music artist portrait with bold cinematic lighting, 
+    dramatic shadows and highlights, artistic color grading with deep blues and purples, 
+    modern studio photography with dramatic atmosphere, stylish and sophisticated,
+    magazine cover quality, artistic enhancement with visible but tasteful effects.
+    Maintain natural facial features, preserve original pose and gender.
+    `;
+    
+    const output = await replicate.run(PORTRAIT_MODEL, {
+      input: {
+        prompt: dramaticPrompt,
+        image: file.url,
+        num_inference_steps: 30,
+        guidance_scale: 9.0, // Максимальное следование промпту
+        strength: 0.85, // Сильная обработка для заметных эффектов
+        scheduler: "K_EULER",
+        seed: null,
+      }
+    });
+    
+    const processingTime = Date.now() - startTime;
+    console.log('[AI Image] Dramatic enhancement completed in', processingTime, 'ms');
+    
+    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
+    
+    if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
+      throw new Error('Invalid output from dramatic AI model');
+    }
+    
+    return {
+      success: true,
+      enhancedImageUrl,
+      processingTime
+    };
+    
+  } catch (error) {
+    console.error('[AI Image] Dramatic enhancement failed:', error);
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Dramatic enhancement failed'
     };
   }
 }

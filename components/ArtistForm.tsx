@@ -218,9 +218,9 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Фото артиста <span className="text-gray-500">(необязательно)</span>
         </label>
-        <p className="text-sm text-gray-500 mb-4">
-          Загрузите портрет или промо-фото — AI сделает его стильным для EPK
-        </p>
+             <p className="text-sm text-gray-500 mb-4">
+               Загрузите портрет или промо-фото — AI добавит драматичное освещение и стильную цветокоррекцию
+             </p>
         
         {!photoState.file ? (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition">

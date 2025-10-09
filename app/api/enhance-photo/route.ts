@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import { enhanceArtistPortrait, enhanceArtistPortraitFallback, validateImage } from '@/lib/aiImage';
+import { enhanceArtistPortrait, enhanceArtistPortraitFallback, enhanceArtistPortraitDramatic, validateImage } from '@/lib/aiImage';
 import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
@@ -41,12 +41,18 @@ export async function POST(request: NextRequest) {
     
     console.log('[Enhance] Image validated, starting AI processing...');
     
-    // Пытаемся улучшить изображение с помощью AI
-    let result = await enhanceArtistPortrait(imageBuffer);
+    // Пытаемся улучшить изображение с помощью AI (драматичная обработка)
+    let result = await enhanceArtistPortraitDramatic(imageBuffer);
     
-    // Если основная модель не сработала, пробуем fallback
+    // Если драматичная модель не сработала, пробуем обычную
     if (!result.success) {
-      console.log('[Enhance] Primary model failed, trying fallback...');
+      console.log('[Enhance] Dramatic model failed, trying standard...');
+      result = await enhanceArtistPortrait(imageBuffer);
+    }
+    
+    // Если и обычная не сработала, пробуем fallback
+    if (!result.success) {
+      console.log('[Enhance] Standard model failed, trying fallback...');
       result = await enhanceArtistPortraitFallback(imageBuffer);
     }
     
