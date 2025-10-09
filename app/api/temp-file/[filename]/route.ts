@@ -5,10 +5,10 @@ import { existsSync } from 'fs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  context: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await context.params;
     
     // Проверяем безопасность имени файла
     if (!filename || filename.includes('..') || filename.includes('/')) {
@@ -48,7 +48,7 @@ export async function GET(
         break;
     }
     
-    return new NextResponse(fileBuffer, {
+    return new NextResponse(Buffer.from(fileBuffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
@@ -70,10 +70,10 @@ export async function GET(
 // Удаление временного файла (опционально)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  context: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await context.params;
     
     if (!filename || filename.includes('..') || filename.includes('/')) {
       return NextResponse.json(

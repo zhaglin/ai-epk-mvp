@@ -7,14 +7,15 @@ import { ArtistData } from '@/types';
 
 export async function POST(request: NextRequest) {
   let browser = null;
+  let artistData: ArtistData | null = null;
 
   try {
     console.log('[PDF] Starting PDF generation...');
     
     // Получаем данные артиста
-    const artistData: ArtistData = await request.json();
+    artistData = await request.json();
     
-    if (!artistData.name || !artistData.generated) {
+    if (!artistData || !artistData.name || !artistData.generated) {
       return NextResponse.json(
         { error: 'Missing required data: name and generated BIO' },
         { status: 400 }
@@ -137,36 +138,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Пробуем fallback метод
-    try {
-      console.log('[PDF] Trying fallback PDF generation...');
-      const pdfBuffer = await generatePDFFallback(artistData);
-      
-      const slug = artistData.name
-        .replace(/\s+/g, '_')
-        .replace(/[^a-zA-Z0-9_-]/g, '');
+    // Пробуем fallback метод (только если artistData инициализирован)
+    if (artistData) {
+      try {
+        console.log('[PDF] Trying fallback PDF generation...');
+        const pdfBuffer = await generatePDFFallback(artistData);
+        
+        const slug = artistData.name
+          .replace(/\s+/g, '_')
+          .replace(/[^a-zA-Z0-9_-]/g, '');
 
-      return new NextResponse(pdfBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
-          'Cache-Control': 'no-cache',
-        },
-      });
-      
-    } catch (fallbackError) {
-      console.error('[PDF] Fallback also failed:', fallbackError);
-      
-      return NextResponse.json(
-        { 
-          error: 'Failed to generate PDF with both methods',
-          details: error instanceof Error ? error.message : 'Unknown error',
-          fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error'
-        },
-        { status: 500 }
-      );
+        return new NextResponse(Buffer.from(pdfBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
+            'Cache-Control': 'no-cache',
+          },
+        });
+        
+      } catch (fallbackError) {
+        console.error('[PDF] Fallback also failed:', fallbackError);
+        
+        return NextResponse.json(
+          { 
+            error: 'Failed to generate PDF with both methods',
+            details: error instanceof Error ? error.message : 'Unknown error',
+            fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error'
+          },
+          { status: 500 }
+        );
+      }
     }
+    
+    // Если artistData не инициализирован, возвращаем ошибку парсинга
+    return NextResponse.json(
+      { 
+        error: 'Failed to parse request data',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
   }
 }
 

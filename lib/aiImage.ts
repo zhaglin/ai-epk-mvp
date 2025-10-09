@@ -207,50 +207,8 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
   }
 }
 
-/**
- * Альтернативная модель SwinIR для суперразрешения (fallback)
- */
-export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promise<ImageEnhancementResult> {
-  const startTime = Date.now();
-  
-  try {
-    console.log('[AI Image] Trying SwinIR fallback model...');
-    
-    const file = await replicate.files.create(imageBuffer, {
-      contentType: 'image/jpeg'
-    });
-    
-    const output = await replicate.run(ALTERNATIVE_MODEL, {
-      input: {
-        image: file.url,
-        task_type: "Real-World Image Super-Resolution-Large", // Лучший режим для портретов
-      }
-    });
-    
-    const processingTime = Date.now() - startTime;
-    console.log('[AI Image] SwinIR enhancement completed in', processingTime, 'ms');
-    
-    const enhancedImageUrl = Array.isArray(output) ? output[0] : output;
-    
-    if (!enhancedImageUrl || typeof enhancedImageUrl !== 'string') {
-      throw new Error('Invalid output from SwinIR model');
-    }
-    
-    return {
-      success: true,
-      enhancedImageUrl,
-      processingTime
-    };
-    
-  } catch (error) {
-    console.error('[AI Image] SwinIR fallback model also failed:', error);
-    
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'SwinIR fallback model failed'
-    };
-  }
-}
+// УДАЛЕНА: Функция enhanceArtistPortraitFallback больше не используется
+// Теперь используется только Real-ESRGAN без face_enhance
 
 /**
  * Специализированное улучшение лиц с помощью CodeFormer
