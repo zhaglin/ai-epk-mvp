@@ -13,15 +13,15 @@ export async function enhanceImageSimple(imageBuffer: Buffer): Promise<Buffer> {
         fit: 'inside',
         withoutEnlargement: true 
       })
-      .sharpen(1.0) // Легкое повышение четкости
+      .sharpen(2.0) // Более заметное повышение четкости
       .modulate({
-        brightness: 1.05, // +5% яркости
-        saturation: 1.02, // +2% насыщенности
+        brightness: 1.1, // +10% яркости (более заметно)
+        saturation: 1.08, // +8% насыщенности
         hue: 0 // Без изменения оттенка
       })
-      .gamma(1.1) // Легкая коррекция гаммы
+      .gamma(1.15) // Более заметная коррекция гаммы
       .jpeg({ 
-        quality: 92, // Высокое качество
+        quality: 95, // Максимальное качество
         progressive: true 
       })
       .toBuffer();

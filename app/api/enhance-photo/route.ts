@@ -103,12 +103,12 @@ export async function POST(request: NextRequest) {
     // Создаем URL для доступа к улучшенному изображению
     const enhancedUrl = `/generated/${finalFileName}`;
     
-    console.log('[Enhance] Enhancement completed successfully:', {
-      fileId,
-      finalFileName,
-      enhancedUrl,
-      processingTime: result.processingTime
-    });
+           console.log('[Enhance] Enhancement completed successfully:', {
+             fileId,
+             finalFileName,
+             enhancedUrl,
+             processingTime: processingTime
+           });
     
     // Удаляем временный файл
     try {
