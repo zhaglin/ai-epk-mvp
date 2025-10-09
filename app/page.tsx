@@ -57,6 +57,49 @@ export default function Home() {
     setIsEditing(false);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!artistInput || !generatedBio) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...artistInput,
+          generated: generatedBio,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Ошибка при генерации PDF');
+      }
+
+      // Получаем blob из ответа
+      const blob = await response.blob();
+      
+      // Создаем ссылку для скачивания
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EPK_${artistInput.name.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Очищаем
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка при скачивании PDF');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -202,10 +245,11 @@ export default function Home() {
                       Создать новое BIO
                     </button>
                     <button
-                      disabled
+                      onClick={handleDownloadPDF}
+                      disabled={isLoading}
                       className="flex-1 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      📄 Скачать PDF (скоро)
+                      {isLoading ? '⏳ Создаю PDF...' : '📄 Скачать PDF'}
                     </button>
                   </div>
                 </div>
