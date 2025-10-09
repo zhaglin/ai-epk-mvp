@@ -19,22 +19,22 @@ interface PhotoUploadState {
 
 export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormProps) {
   const [formData, setFormData] = useState<ArtistInput>({
-    name: 'DJ TechnoNik',
-    city: 'Москва',
-    genres: ['Techno', 'Melodic Techno', 'Progressive House'],
-    venues: 'Клубы Москвы (Arma17, Mutabor), фестиваль Signal 2024, резидент Powerhouse',
-    style: 'Гипнотичные арпеджио на модульных синтезаторах, deep и энергичные сеты с акцентом на groove',
-    skills: 'Диджеинг на 4 деках, продакшн в Ableton Live, модульные синтезаторы, live-act',
-    achievements: 'Релизы на Afterlife и Drumcode, 200+ выступлений, резидент клуба Powerhouse, саппорт от Tale Of Us',
+    name: '',
+    city: '',
+    genres: [],
+    venues: '',
+    style: '',
+    skills: '',
+    achievements: '',
     links: {
-      instagram: 'https://instagram.com/djtechnonik',
-      soundcloud: 'https://soundcloud.com/djtechnonik',
+      instagram: '',
+      soundcloud: '',
       mixcloud: '',
       website: '',
     },
   });
 
-  const [genresInput, setGenresInput] = useState('Techno, Melodic Techno, Progressive House');
+  const [genresInput, setGenresInput] = useState('');
   const [errors, setErrors] = useState<Partial<Record<keyof ArtistInput, string>>>({});
   
   const [photoState, setPhotoState] = useState<PhotoUploadState>({
@@ -349,47 +349,67 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
       </div>
 
       {/* Город */}
-      <div>
-        <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-          Город <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="city" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          <span>Город <span className="text-red-500">*</span></span>
         </label>
         <input
           type="text"
           id="city"
           value={formData.city}
           onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white ${
-            errors.city ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg ${
+            errors.city ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Москва"
           disabled={isLoading}
         />
-        {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
+        {errors.city && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.city}</span>
+          </div>
+        )}
       </div>
 
       {/* Жанры */}
-      <div>
-        <label htmlFor="genres" className="block text-sm font-medium text-gray-700 mb-2">
-          Жанры <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="genres" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+          </svg>
+          <span>Жанры <span className="text-red-500">*</span></span>
         </label>
         <input
           type="text"
           id="genres"
           value={genresInput}
           onChange={(e) => handleGenresChange(e.target.value)}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white ${
-            errors.genres ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg ${
+            errors.genres ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Techno, House, Melodic Techno (через запятую)"
           disabled={isLoading}
         />
-        {errors.genres && <p className="mt-1 text-sm text-red-600">{errors.genres}</p>}
+        {errors.genres && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.genres}</span>
+          </div>
+        )}
         {formData.genres.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {formData.genres.map((genre, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-700"
               >
                 {genre}
               </span>
@@ -399,88 +419,136 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
       </div>
 
       {/* Места выступлений */}
-      <div>
-        <label htmlFor="venues" className="block text-sm font-medium text-gray-700 mb-2">
-          Места выступлений <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="venues" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+          </svg>
+          <span>Места выступлений <span className="text-red-500">*</span></span>
         </label>
         <textarea
           id="venues"
           value={formData.venues}
           onChange={(e) => setFormData((prev) => ({ ...prev, venues: e.target.value }))}
-          rows={3}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
-            errors.venues ? 'border-red-500' : 'border-gray-300'
+          rows={2}
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg resize-none ${
+            errors.venues ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Клубы Москвы и Санкт-Петербурга, фестиваль Signal 2024"
           disabled={isLoading}
         />
-        {errors.venues && <p className="mt-1 text-sm text-red-600">{errors.venues}</p>}
+        {errors.venues && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.venues}</span>
+          </div>
+        )}
       </div>
 
       {/* Стиль/подход */}
-      <div>
-        <label htmlFor="style" className="block text-sm font-medium text-gray-700 mb-2">
-          Стиль и подход <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="style" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+          </svg>
+          <span>Стиль и подход <span className="text-red-500">*</span></span>
         </label>
         <textarea
           id="style"
           value={formData.style}
           onChange={(e) => setFormData((prev) => ({ ...prev, style: e.target.value }))}
-          rows={3}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
-            errors.style ? 'border-red-500' : 'border-gray-300'
+          rows={2}
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg resize-none ${
+            errors.style ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Энергичные сеты с глубокими басами и гипнотичными мелодиями"
           disabled={isLoading}
         />
-        {errors.style && <p className="mt-1 text-sm text-red-600">{errors.style}</p>}
+        {errors.style && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.style}</span>
+          </div>
+        )}
       </div>
 
       {/* Навыки */}
-      <div>
-        <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
-          Навыки <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="skills" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+            <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
+          </svg>
+          <span>Навыки <span className="text-red-500">*</span></span>
         </label>
         <textarea
           id="skills"
           value={formData.skills}
           onChange={(e) => setFormData((prev) => ({ ...prev, skills: e.target.value }))}
-          rows={3}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
-            errors.skills ? 'border-red-500' : 'border-gray-300'
+          rows={2}
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg resize-none ${
+            errors.skills ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Диджеинг, продакшн в Ableton Live, микширование и мастеринг"
           disabled={isLoading}
         />
-        {errors.skills && <p className="mt-1 text-sm text-red-600">{errors.skills}</p>}
+        {errors.skills && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.skills}</span>
+          </div>
+        )}
       </div>
 
       {/* Достижения */}
-      <div>
-        <label htmlFor="achievements" className="block text-sm font-medium text-gray-700 mb-2">
-          Достижения <span className="text-red-500">*</span>
+      <div className="group">
+        <label htmlFor="achievements" className="block text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          <span>Достижения <span className="text-red-500">*</span></span>
         </label>
         <textarea
           id="achievements"
           value={formData.achievements}
           onChange={(e) => setFormData((prev) => ({ ...prev, achievements: e.target.value }))}
-          rows={3}
-          className={`w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white resize-none ${
-            errors.achievements ? 'border-red-500' : 'border-gray-300'
+          rows={2}
+          className={`w-full px-5 py-4 border-2 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800 text-lg resize-none ${
+            errors.achievements ? 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-300 dark:border-slate-600 group-hover:border-gray-400 dark:group-hover:border-slate-500'
           }`}
           placeholder="Например: Релизы на Drumcode, выступления на Awakenings и Time Warp"
           disabled={isLoading}
         />
-        {errors.achievements && <p className="mt-1 text-sm text-red-600">{errors.achievements}</p>}
+        {errors.achievements && (
+          <div className="mt-2 flex items-center space-x-2 text-sm text-red-600 dark:text-red-400 animate-shake">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>{errors.achievements}</span>
+          </div>
+        )}
       </div>
 
       {/* Ссылки на соцсети */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Ссылки (необязательно)</h3>
+      <div className="border-t border-gray-200 dark:border-slate-700 pt-8">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Ссылки <span className="text-gray-500 dark:text-gray-400 font-normal text-base">(необязательно)</span></h3>
+        </div>
         
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="instagram" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="group">
+            <label htmlFor="instagram" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Instagram
             </label>
             <input
@@ -493,14 +561,14 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, instagram: e.target.value },
                 }))
               }
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800"
               placeholder="https://instagram.com/yourname"
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label htmlFor="soundcloud" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="group">
+            <label htmlFor="soundcloud" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               SoundCloud
             </label>
             <input
@@ -513,14 +581,14 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, soundcloud: e.target.value },
                 }))
               }
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800"
               placeholder="https://soundcloud.com/yourname"
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label htmlFor="mixcloud" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="group">
+            <label htmlFor="mixcloud" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Mixcloud
             </label>
             <input
@@ -533,14 +601,14 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, mixcloud: e.target.value },
                 }))
               }
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800"
               placeholder="https://mixcloud.com/yourname"
               disabled={isLoading}
             />
           </div>
 
-          <div>
-            <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="group">
+            <label htmlFor="website" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Сайт
             </label>
             <input
@@ -553,7 +621,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                   links: { ...prev.links, website: e.target.value },
                 }))
               }
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-900 placeholder-gray-400 bg-white"
+              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:border-blue-400 transition text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-slate-800"
               placeholder="https://yourwebsite.com"
               disabled={isLoading}
             />
