@@ -10,22 +10,22 @@ interface ArtistFormProps {
 
 export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormProps) {
   const [formData, setFormData] = useState<ArtistInput>({
-    name: '',
-    city: '',
-    genres: [],
-    venues: '',
-    style: '',
-    skills: '',
-    achievements: '',
+    name: 'DJ TechnoNik',
+    city: 'Москва',
+    genres: ['Techno', 'Melodic Techno', 'Progressive House'],
+    venues: 'Клубы Москвы (Arma17, Mutabor), фестиваль Signal 2024, резидент Powerhouse',
+    style: 'Гипнотичные арпеджио на модульных синтезаторах, deep и энергичные сеты с акцентом на groove',
+    skills: 'Диджеинг на 4 деках, продакшн в Ableton Live, модульные синтезаторы, live-act',
+    achievements: 'Релизы на Afterlife и Drumcode, 200+ выступлений, резидент клуба Powerhouse, саппорт от Tale Of Us',
     links: {
-      instagram: '',
-      soundcloud: '',
+      instagram: 'https://instagram.com/djtechnonik',
+      soundcloud: 'https://soundcloud.com/djtechnonik',
       mixcloud: '',
       website: '',
     },
   });
 
-  const [genresInput, setGenresInput] = useState('');
+  const [genresInput, setGenresInput] = useState('Techno, Melodic Techno, Progressive House');
   const [errors, setErrors] = useState<Partial<Record<keyof ArtistInput, string>>>({});
 
   const validateForm = (): boolean => {
