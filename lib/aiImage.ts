@@ -91,79 +91,31 @@ export async function enhanceArtistPortraitPro(
     
     console.log('[AI Image Pro] Image prepared for Replicate (size:', imageBuffer.length, 'bytes)');
     
-    // ЭТАП 1: Улучшение лица с помощью CodeFormer
-    console.log('[AI Image Pro] Step 1: Face restoration with CodeFormer...');
-    const faceRestored = await replicate.run(CODEFORMER_MODEL, {
+    // ПРОСТОЕ УЛУЧШЕНИЕ КАЧЕСТВА БЕЗ ИЗМЕНЕНИЯ ЛИЦА
+    // Используем Real-ESRGAN только для повышения разрешения
+    // face_enhance = false - НЕ ТРОГАЕМ ЛИЦО!
+    console.log('[AI Image Pro] Light quality enhancement (no face/style changes)...');
+    
+    const enhanced = await replicate.run(REAL_ESRGAN_MODEL, {
       input: {
         image: dataUri,
-        upscale: 2,
-        face_upsample: true,
-        background_enhance: true,
-        codeformer_fidelity: 0.9,
+        scale: 2, // Увеличиваем разрешение в 2 раза
+        face_enhance: false, // КРИТИЧНО: НЕ ИЗМЕНЯЕМ ЛИЦО
       }
     });
     
     // Получаем URL из FileOutput и преобразуем в строку
-    let faceRestoredUrl: string;
-    if (Array.isArray(faceRestored)) {
-      const firstOutput = faceRestored[0];
+    let finalUrl: string;
+    if (Array.isArray(enhanced)) {
+      const firstOutput = enhanced[0];
       const urlObj = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
-      faceRestoredUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
+      finalUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
     } else {
-      const urlObj = typeof faceRestored === 'string' ? faceRestored : (faceRestored as any).url();
-      faceRestoredUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
+      const urlObj = typeof enhanced === 'string' ? enhanced : (enhanced as any).url();
+      finalUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
     }
     
-    console.log('[AI Image Pro] Face restored URL:', faceRestoredUrl);
-    
-    // ЭТАП 2: Художественная стилизация с SDXL
-    console.log('[AI Image Pro] Step 2: Artistic stylization with SDXL...', style);
-    const stylePrompts = STYLE_PROMPTS[style];
-    
-    // Определяем силу стилизации
-    const strengthMap: Record<Intensity, number> = {
-      subtle: 0.25,
-      medium: 0.4,
-      bold: 0.6
-    };
-    
-    const guidanceMap: Record<Intensity, number> = {
-      subtle: 5,
-      medium: 7,
-      bold: 9
-    };
-    
-    const stylized = await replicate.run(SDXL_MODEL, {
-      input: {
-        image: faceRestoredUrl,
-        prompt: stylePrompts.positive,
-        negative_prompt: stylePrompts.negative,
-        num_inference_steps: 30,
-        guidance_scale: guidanceMap[intensity],
-        strength: strengthMap[intensity],
-        seed: seed,
-      }
-    });
-    
-    // Получаем URL из FileOutput и преобразуем в строку
-    let stylizedUrl: string;
-    if (Array.isArray(stylized)) {
-      const firstOutput = stylized[0];
-      const urlObj = typeof firstOutput === 'string' ? firstOutput : firstOutput.url();
-      stylizedUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
-    } else {
-      const urlObj = typeof stylized === 'string' ? stylized : (stylized as any).url();
-      stylizedUrl = typeof urlObj === 'string' ? urlObj : urlObj.toString();
-    }
-    
-    console.log('[AI Image Pro] Stylized URL:', stylizedUrl);
-    
-    // ЭТАП 3 ПРОПУЩЕН: SDXL уже дал высокое разрешение (2048x1528)
-    // Real-ESRGAN не нужен, так как изображение превышает GPU лимит
-    // CodeFormer уже увеличил разрешение в 2 раза на этапе 1
-    console.log('[AI Image Pro] Skipping final upscale - SDXL output is already high resolution');
-    
-    const finalUrl = stylizedUrl;
+    console.log('[AI Image Pro] Enhanced URL (face preserved):', finalUrl);
     
     const processingTime = Date.now() - startTime;
     console.log('[AI Image Pro] Professional enhancement completed!', {

@@ -96,9 +96,18 @@ export async function POST(request: NextRequest) {
            enhancedBuffer = Buffer.from(await enhancedResponse.arrayBuffer());
            processingTime = result.processingTime || 0;
     
-    // Дополнительная оптимизация уже обработанного изображения
+    // Дополнительная тонкая постобработка (яркость, контраст, насыщенность)
     const optimizedBuffer = await sharp(enhancedBuffer)
-      .jpeg({ quality: 90 })
+      .modulate({
+        brightness: 1.05, // +5% яркости для свежести
+        saturation: 1.08, // +8% насыщенности для живости
+      })
+      .sharpen(1.2) // Легкая резкость
+      .linear(1.05, 0) // Легкое повышение контраста
+      .jpeg({ 
+        quality: 92,
+        chromaSubsampling: '4:4:4' // Лучшая цветопередача
+      })
       .toBuffer();
     
     // Создаем уникальное имя для финального файла
