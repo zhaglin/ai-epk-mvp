@@ -18,8 +18,8 @@ High quality studio photography, magazine cover style, subtle artistic enhanceme
 // Модель Stable Diffusion для портретов
 const PORTRAIT_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
 
-// Альтернативная модель для более заметных эффектов
-const ALTERNATIVE_MODEL = "black-forest-labs/flux-schnell:de9f05b6070d8a8c7c347e8d6b3d3b3b3b3b3b3b";
+// Альтернативная модель для более заметных эффектов (используем тот же SDXL)
+const ALTERNATIVE_MODEL = "stability-ai/sdxl:8beff3369e81422112d93b89ca01426147de542cd4684c244b673b105188fe5f";
 
 export interface ImageEnhancementResult {
   success: boolean;
@@ -55,8 +55,6 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
         guidance_scale: 8.5, // Более сильное следование промпту
         strength: 0.8, // Увеличенная обработка для заметных изменений
         scheduler: "K_EULER",
-        seed: null, // Случайный seed для разнообразия
-        style: "enhanced", // Дополнительный стиль
       }
     });
     
@@ -105,7 +103,8 @@ export async function enhanceArtistPortraitFallback(imageBuffer: Buffer): Promis
         image: file.url,
         num_inference_steps: 20,
         guidance_scale: 7.0,
-        strength: 0.75,
+        strength: 0.7,
+        scheduler: "K_EULER",
       }
     });
     
@@ -158,7 +157,6 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
         guidance_scale: 9.0, // Максимальное следование промпту
         strength: 0.85, // Сильная обработка для заметных эффектов
         scheduler: "K_EULER",
-        seed: null,
       }
     });
     
