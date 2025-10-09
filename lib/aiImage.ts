@@ -85,18 +85,17 @@ export async function enhanceArtistPortraitPro(
       throw new Error('REPLICATE_API_TOKEN is not configured');
     }
     
-    // Загружаем изображение в Replicate
-    const file = await replicate.files.create(imageBuffer, {
-      contentType: 'image/jpeg'
-    });
+    // Конвертируем изображение в data URI для Replicate
+    const base64Image = imageBuffer.toString('base64');
+    const dataUri = `data:image/jpeg;base64,${base64Image}`;
     
-    console.log('[AI Image Pro] Image uploaded to Replicate:', file.id);
+    console.log('[AI Image Pro] Image prepared for Replicate (size:', imageBuffer.length, 'bytes)');
     
     // ЭТАП 1: Улучшение лица с помощью CodeFormer
     console.log('[AI Image Pro] Step 1: Face restoration with CodeFormer...');
     const faceRestored = await replicate.run(CODEFORMER_MODEL, {
       input: {
-        image: file.url,
+        image: dataUri,
         upscale: 2,
         face_upsample: true,
         background_enhance: true,
@@ -192,17 +191,16 @@ export async function enhanceArtistPortrait(imageBuffer: Buffer): Promise<ImageE
   try {
     console.log('[AI Image] Starting Real-ESRGAN portrait enhancement...');
     
-    // Создаем файл в Replicate
-    const file = await replicate.files.create(imageBuffer, {
-      contentType: 'image/jpeg'
-    });
+    // Конвертируем изображение в data URI
+    const base64Image = imageBuffer.toString('base64');
+    const dataUri = `data:image/jpeg;base64,${base64Image}`;
     
-    console.log('[AI Image] File uploaded to Replicate:', file.id);
+    console.log('[AI Image] Image prepared for Real-ESRGAN (size:', imageBuffer.length, 'bytes)');
     
     // Запускаем Real-ESRGAN для улучшения качества изображения
     const output = await replicate.run(REAL_ESRGAN_MODEL, {
       input: {
-        image: file.url,
+        image: dataUri,
         scale: 2, // Увеличиваем разрешение в 2 раза
         face_enhance: true, // Включаем улучшение лиц
       }
@@ -288,13 +286,15 @@ export async function enhanceArtistPortraitDramatic(imageBuffer: Buffer): Promis
   try {
     console.log('[AI Image] Starting CodeFormer face enhancement...');
     
-    const file = await replicate.files.create(imageBuffer, {
-      contentType: 'image/jpeg'
-    });
+    // Конвертируем изображение в data URI
+    const base64Image = imageBuffer.toString('base64');
+    const dataUri = `data:image/jpeg;base64,${base64Image}`;
+    
+    console.log('[AI Image] Image prepared for CodeFormer (size:', imageBuffer.length, 'bytes)');
     
     const output = await replicate.run(CODEFORMER_MODEL, {
       input: {
-        image: file.url,
+        image: dataUri,
         upscale: 2, // Увеличение разрешения в 2 раза
         face_upsample: true, // Улучшение разрешения лица
         background_enhance: true, // Улучшение фона

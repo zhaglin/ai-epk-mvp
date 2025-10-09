@@ -5,13 +5,11 @@ import { existsSync } from 'fs';
 import { 
   enhanceArtistPortraitPro, 
   enhanceArtistPortrait, 
-  enhanceArtistPortraitFallback, 
   enhanceArtistPortraitDramatic, 
   validateImage,
   type StylePreset,
   type Intensity 
 } from '@/lib/aiImage';
-import { enhanceImageSimple, shouldUseSimpleEnhancement } from '@/lib/simpleImageEnhancement';
 import sharp from 'sharp';
 
 export async function POST(request: NextRequest) {
@@ -61,52 +59,42 @@ export async function POST(request: NextRequest) {
            let enhancedBuffer: Buffer;
            let processingTime = 0;
            
-           // Проверяем, использовать ли простое улучшение
-           if (shouldUseSimpleEnhancement()) {
-             console.log('[Enhance] Using simple enhancement (no AI changes)...');
-             const startTime = Date.now();
-             enhancedBuffer = await enhanceImageSimple(imageBuffer);
-             processingTime = Date.now() - startTime;
-             console.log('[Enhance] Simple enhancement completed in', processingTime, 'ms');
-           } else {
-             // ПРОФЕССИОНАЛЬНЫЙ ПАЙПЛАЙН с тремя этапами
-             let result = await enhanceArtistPortraitPro(imageBuffer, {
-               style: enhancementStyle,
-               intensity: enhancementIntensity,
-               seed
-             });
-             
-             // Если профессиональный пайплайн не сработал, пробуем упрощенные версии
-             if (!result.success) {
-               console.log('[Enhance] Pro pipeline failed, trying Real-ESRGAN only...');
-               result = await enhanceArtistPortrait(imageBuffer);
-             }
-             
-             if (!result.success) {
-               console.log('[Enhance] Real-ESRGAN failed, trying CodeFormer...');
-               result = await enhanceArtistPortraitDramatic(imageBuffer);
-             }
-             
-             if (!result.success) {
-               console.error('[Enhance] All AI models failed, falling back to simple enhancement');
-               
-               // Fallback к простому улучшению
-               const startTime = Date.now();
-               enhancedBuffer = await enhanceImageSimple(imageBuffer);
-               processingTime = Date.now() - startTime;
-             } else {
-               // Скачиваем улучшенное изображение от AI
-               console.log('[Enhance] Downloading AI enhanced image from:', result.enhancedImageUrl);
-               
-               const enhancedResponse = await fetch(result.enhancedImageUrl!);
-               if (!enhancedResponse.ok) {
-                 throw new Error('Failed to download enhanced image');
-               }
-               
-               enhancedBuffer = Buffer.from(await enhancedResponse.arrayBuffer());
-               processingTime = result.processingTime || 0;
-             }
+           // ТОЛЬКО AI - НЕТ ПРОСТОГО УЛУЧШЕНИЯ
+           console.log('[Enhance] Starting AI-only enhancement (no fallback)...');
+           
+           // ПРОФЕССИОНАЛЬНЫЙ ПАЙПЛАЙН с тремя этапами
+           let result = await enhanceArtistPortraitPro(imageBuffer, {
+             style: enhancementStyle,
+             intensity: enhancementIntensity,
+             seed
+           });
+           
+           // Если профессиональный пайплайн не сработал, пробуем упрощенные AI версии
+           if (!result.success) {
+             console.log('[Enhance] Pro pipeline failed, trying Real-ESRGAN only...');
+             result = await enhanceArtistPortrait(imageBuffer);
            }
+           
+           if (!result.success) {
+             console.log('[Enhance] Real-ESRGAN failed, trying CodeFormer...');
+             result = await enhanceArtistPortraitDramatic(imageBuffer);
+           }
+           
+           if (!result.success) {
+             // НЕТ FALLBACK - возвращаем ошибку
+             throw new Error(`All AI models failed: ${result.error || 'Unknown error'}`);
+           }
+           
+           // Скачиваем улучшенное изображение от AI
+           console.log('[Enhance] Downloading AI enhanced image from:', result.enhancedImageUrl);
+           
+           const enhancedResponse = await fetch(result.enhancedImageUrl!);
+           if (!enhancedResponse.ok) {
+             throw new Error('Failed to download enhanced image');
+           }
+           
+           enhancedBuffer = Buffer.from(await enhancedResponse.arrayBuffer());
+           processingTime = result.processingTime || 0;
     
     // Дополнительная оптимизация уже обработанного изображения
     const optimizedBuffer = await sharp(enhancedBuffer)
