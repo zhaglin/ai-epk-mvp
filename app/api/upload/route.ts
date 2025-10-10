@@ -28,17 +28,49 @@ async function ensureDirectories() {
   console.log('[Upload] Creating directories:', {
     uploadsDir,
     generatedDir,
-    isNetlify: !!process.env.NETLIFY
+    isNetlify: !!process.env.NETLIFY,
+    platform: process.platform,
+    nodeEnv: process.env.NODE_ENV
   });
   
   try {
+    // Создаем родительскую директорию для Netlify
+    if (process.env.NETLIFY) {
+      try {
+        await mkdir('/tmp/artistone', { recursive: true });
+        console.log('[Upload] Created parent directory /tmp/artistone');
+      } catch (parentError) {
+        console.error('[Upload] Failed to create parent directory:', parentError);
+        // Продолжаем, возможно директория уже существует
+      }
+    }
+    
     await mkdir(uploadsDir, { recursive: true });
     console.log('[Upload] Created uploads directory:', uploadsDir);
     
     await mkdir(generatedDir, { recursive: true });
     console.log('[Upload] Created generated directory:', generatedDir);
+    
+    // Проверяем доступность директорий
+    const fs = await import('fs/promises');
+    try {
+      await fs.access(uploadsDir);
+      console.log('[Upload] Uploads directory is accessible');
+    } catch (accessError) {
+      console.error('[Upload] Uploads directory is not accessible:', accessError);
+      throw new Error(`Uploads directory not accessible: ${accessError instanceof Error ? accessError.message : 'Unknown error'}`);
+    }
+    
   } catch (error) {
     console.error('[Upload] Error creating directories:', error);
+    console.error('[Upload] Directory creation details:', {
+      uploadsDir,
+      generatedDir,
+      isNetlify: !!process.env.NETLIFY,
+      platform: process.platform,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: error instanceof Error && 'code' in error ? (error as any).code : undefined
+    });
     throw new Error(`Failed to create directories: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
   
@@ -167,6 +199,15 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('[Upload] Error uploading file:', error);
+    console.error('[Upload] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : undefined,
+      stack: error instanceof Error ? error.stack : undefined,
+      isNetlify: !!process.env.NETLIFY,
+      nodeEnv: process.env.NODE_ENV,
+      platform: process.platform,
+      tmpDir: process.env.NETLIFY ? '/tmp/artistone' : process.cwd() + '/tmp'
+    });
     
     // DECISION-E1: Унифицированные ответы ошибок
     const requestId = uuidv4();
