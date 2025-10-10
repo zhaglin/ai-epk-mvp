@@ -4,8 +4,8 @@ import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-// Максимальный размер файла: 5MB
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// Максимальный размер файла: 2MB (уменьшено для Netlify)
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 // Поддерживаемые типы изображений
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -21,11 +21,21 @@ async function ensureDirectories() {
     ? '/tmp/generated'
     : join(process.cwd(), 'public', 'generated');
   
+  console.log('[Upload] Creating directories:', {
+    uploadsDir,
+    generatedDir,
+    isNetlify: !!process.env.NETLIFY
+  });
+  
   try {
     await mkdir(uploadsDir, { recursive: true });
+    console.log('[Upload] Created uploads directory:', uploadsDir);
+    
     await mkdir(generatedDir, { recursive: true });
+    console.log('[Upload] Created generated directory:', generatedDir);
   } catch (error) {
-    // Директории уже существуют
+    console.error('[Upload] Error creating directories:', error);
+    throw new Error(`Failed to create directories: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
   
   return { uploadsDir, generatedDir };
@@ -34,12 +44,18 @@ async function ensureDirectories() {
 export async function POST(request: NextRequest) {
   try {
     console.log('[Upload] Starting file upload...');
+    console.log('[Upload] Environment check:', {
+      isNetlify: !!process.env.NETLIFY,
+      nodeEnv: process.env.NODE_ENV,
+      platform: process.platform
+    });
     
     // Получаем данные формы
     const formData = await request.formData();
     const file = formData.get('image') as File;
     
     if (!file) {
+      console.log('[Upload] No file provided in form data');
       return NextResponse.json(
         { error: 'No image file provided' },
         { status: 400 }
@@ -53,10 +69,18 @@ export async function POST(request: NextRequest) {
     });
     
     // Валидация размера файла
+    console.log('[Upload] File size validation:', {
+      fileSize: file.size,
+      maxSize: MAX_FILE_SIZE,
+      isTooLarge: file.size > MAX_FILE_SIZE
+    });
+    
     if (file.size > MAX_FILE_SIZE) {
+      console.log('[Upload] File too large, rejecting upload');
       return NextResponse.json(
         { 
-          error: 'File too large. Maximum size is 5MB.',
+          error: 'File too large. Maximum size is 2MB.',
+          fileSize: file.size,
           maxSize: MAX_FILE_SIZE 
         },
         { status: 400 }
@@ -99,10 +123,19 @@ export async function POST(request: NextRequest) {
     
     // Создаем директории и получаем пути
     const { uploadsDir } = await ensureDirectories();
+    console.log('[Upload] Directories created:', { uploadsDir });
     
     // Сохраняем файл во временную папку
     const tempPath = join(uploadsDir, fileName);
-    await writeFile(tempPath, optimizedBuffer);
+    console.log('[Upload] Attempting to save file to:', tempPath);
+    
+    try {
+      await writeFile(tempPath, optimizedBuffer);
+      console.log('[Upload] File saved successfully to:', tempPath);
+    } catch (writeError) {
+      console.error('[Upload] Failed to write file:', writeError);
+      throw new Error(`Failed to write file to ${tempPath}: ${writeError instanceof Error ? writeError.message : 'Unknown error'}`);
+    }
     
     // Создаем URL для доступа к файлу
     const tempUrl = `/api/temp-file/${fileName}`;
@@ -126,10 +159,25 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Upload] Error uploading file:', error);
     
+    // Детальная информация об ошибке для диагностики
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      environment: {
+        isNetlify: !!process.env.NETLIFY,
+        nodeEnv: process.env.NODE_ENV,
+        platform: process.platform
+      }
+    };
+    
+    console.error('[Upload] Detailed error info:', errorDetails);
+    
     return NextResponse.json(
       { 
         error: 'Failed to upload file',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: errorDetails.message,
+        debug: process.env.NODE_ENV === 'development' ? errorDetails : undefined
       },
       { status: 500 }
     );
