@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const debugInfo = {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      isNetlify: !!process.env.NETLIFY,
+      isNetlify: process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME,
       runtime: 'nodejs', // Подтверждаем runtime
       // Проверяем переменные окружения (без значений для безопасности)
       hasOpenAI: !!process.env.OPENAI_API_KEY,
@@ -24,12 +24,12 @@ export async function GET(request: NextRequest) {
       // Информация о системе
       platform: process.platform,
       nodeVersion: process.version,
-      // DECISION-TMP-STORAGE-001: Проверяем доступность директорий
-      tmpDir: process.env.NETLIFY ? '/tmp/artistone' : process.cwd() + '/tmp',
-      uploadsDir: process.env.NETLIFY ? '/tmp/artistone/uploads' : process.cwd() + '/tmp/uploads',
-      generatedDir: process.env.NETLIFY ? '/tmp/artistone/generated' : process.cwd() + '/public/generated',
+      // Проверяем доступность директорий
+      tmpDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp' : process.cwd() + '/tmp',
+      uploadsDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp/uploads' : process.cwd() + '/tmp/uploads',
+      generatedDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp/generated' : process.cwd() + '/public/generated',
       // Лимиты
-      maxFileSize: process.env.NETLIFY ? '10MB' : '10MB',
+      maxFileSize: '10MB',
       clientMaxSize: '8MB',
       // Информация о запросе
       userAgent: request.headers.get('user-agent'),

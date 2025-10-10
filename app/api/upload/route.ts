@@ -17,28 +17,32 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // DECISION-TMP-STORAGE-001: Временное хранилище — /tmp/artistone/uploads
 async function ensureDirectories() {
-  const uploadsDir = process.env.NETLIFY 
-    ? '/tmp/artistone/uploads'
+  // Определяем Netlify по другим признакам, так как NETLIFY env var не установлена
+  const isNetlify = process.env.NODE_ENV === 'production' && process.platform === 'linux' && process.env.AWS_LAMBDA_FUNCTION_NAME;
+  
+  const uploadsDir = isNetlify 
+    ? '/tmp/uploads'
     : join(process.cwd(), 'tmp', 'uploads');
   
-  const generatedDir = process.env.NETLIFY
-    ? '/tmp/artistone/generated'
+  const generatedDir = isNetlify
+    ? '/tmp/generated'
     : join(process.cwd(), 'public', 'generated');
   
   console.log('[Upload] Creating directories:', {
     uploadsDir,
     generatedDir,
-    isNetlify: !!process.env.NETLIFY,
+    isNetlify,
     platform: process.platform,
-    nodeEnv: process.env.NODE_ENV
+    nodeEnv: process.env.NODE_ENV,
+    awsLambdaFunction: !!process.env.AWS_LAMBDA_FUNCTION_NAME
   });
   
   try {
     // Создаем родительскую директорию для Netlify
-    if (process.env.NETLIFY) {
+    if (isNetlify) {
       try {
-        await mkdir('/tmp/artistone', { recursive: true });
-        console.log('[Upload] Created parent directory /tmp/artistone');
+        await mkdir('/tmp', { recursive: true });
+        console.log('[Upload] Created parent directory /tmp');
       } catch (parentError) {
         console.error('[Upload] Failed to create parent directory:', parentError);
         // Продолжаем, возможно директория уже существует
@@ -63,14 +67,14 @@ async function ensureDirectories() {
     
   } catch (error) {
     console.error('[Upload] Error creating directories:', error);
-    console.error('[Upload] Directory creation details:', {
-      uploadsDir,
-      generatedDir,
-      isNetlify: !!process.env.NETLIFY,
-      platform: process.platform,
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      errorCode: error instanceof Error && 'code' in error ? (error as any).code : undefined
-    });
+            console.error('[Upload] Directory creation details:', {
+              uploadsDir,
+              generatedDir,
+              isNetlify,
+              platform: process.platform,
+              errorMessage: error instanceof Error ? error.message : 'Unknown error',
+              errorCode: error instanceof Error && 'code' in error ? (error as any).code : undefined
+            });
     throw new Error(`Failed to create directories: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
   
@@ -80,11 +84,15 @@ async function ensureDirectories() {
 export async function POST(request: NextRequest) {
   try {
     console.log('[Upload] Starting file upload...');
-    console.log('[Upload] Environment check:', {
-      isNetlify: !!process.env.NETLIFY,
-      nodeEnv: process.env.NODE_ENV,
-      platform: process.platform
-    });
+            // Определяем Netlify по другим признакам
+            const isNetlify = process.env.NODE_ENV === 'production' && process.platform === 'linux' && process.env.AWS_LAMBDA_FUNCTION_NAME;
+            
+            console.log('[Upload] Environment check:', {
+              isNetlify,
+              nodeEnv: process.env.NODE_ENV,
+              platform: process.platform,
+              awsLambdaFunction: !!process.env.AWS_LAMBDA_FUNCTION_NAME
+            });
     
     // Получаем данные формы
     const formData = await request.formData();

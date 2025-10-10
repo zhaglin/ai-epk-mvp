@@ -22,14 +22,16 @@ export async function GET(
       );
     }
     
-    // DECISION-TMP-STORAGE-001: Используем /tmp/artistone
-    const uploadsDir = process.env.NETLIFY 
-      ? '/tmp/artistone/uploads'
-      : join(process.cwd(), 'tmp', 'uploads');
-    
-    const generatedDir = process.env.NETLIFY
-      ? '/tmp/artistone/generated'
-      : join(process.cwd(), 'public', 'generated');
+            // Определяем Netlify по другим признакам
+            const isNetlify = process.env.NODE_ENV === 'production' && process.platform === 'linux' && process.env.AWS_LAMBDA_FUNCTION_NAME;
+            
+            const uploadsDir = isNetlify 
+              ? '/tmp/uploads'
+              : join(process.cwd(), 'tmp', 'uploads');
+            
+            const generatedDir = isNetlify
+              ? '/tmp/generated'
+              : join(process.cwd(), 'public', 'generated');
     
     // Ищем файл сначала в uploads, потом в generated
     let filePath = join(uploadsDir, filename);

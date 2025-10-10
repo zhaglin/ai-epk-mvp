@@ -38,9 +38,11 @@ export async function POST(request: NextRequest) {
     });
     
     // Читаем временный файл
-    // DECISION-TMP-STORAGE-001: Используем /tmp/artistone
-    const uploadsDir = process.env.NETLIFY 
-      ? '/tmp/artistone/uploads'
+    // Определяем Netlify по другим признакам
+    const isNetlify = process.env.NODE_ENV === 'production' && process.platform === 'linux' && process.env.AWS_LAMBDA_FUNCTION_NAME;
+    
+    const uploadsDir = isNetlify 
+      ? '/tmp/uploads'
       : join(process.cwd(), 'tmp', 'uploads');
     
     const tempFilePath = join(uploadsDir, actualFileName);
@@ -122,9 +124,9 @@ export async function POST(request: NextRequest) {
     // Создаем уникальное имя для финального файла
     const finalFileName = `enhanced_${fileId}_${Date.now()}.jpg`;
     
-    // DECISION-TMP-STORAGE-001: На Netlify сохраняем в /tmp/artistone
-    const generatedDir = process.env.NETLIFY
-      ? '/tmp/artistone/generated'
+    // На Netlify сохраняем в /tmp/generated
+    const generatedDir = isNetlify
+      ? '/tmp/generated'
       : join(process.cwd(), 'public', 'generated');
     
     // Создаем директорию если нужно
