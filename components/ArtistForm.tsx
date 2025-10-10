@@ -103,16 +103,24 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
   };
 
   const handlePhotoUpload = async (file: File) => {
-    // Валидация файла
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setPhotoState(prev => ({ ...prev, error: 'Файл слишком большой. Максимум 5MB.' }));
+    // EPIC C1: Client-side preflight validation
+    const CLIENT_MAX_SIZE = 8 * 1024 * 1024; // 8MB для клиента
+    if (file.size > CLIENT_MAX_SIZE) {
+      setPhotoState(prev => ({ 
+        ...prev, 
+        error: `Файл слишком большой (${Math.round(file.size / 1024 / 1024)} MB). Максимум: ${Math.round(CLIENT_MAX_SIZE / 1024 / 1024)} MB. Попробуйте сжать изображение.`,
+        isUploading: false 
+      }));
       return;
     }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setPhotoState(prev => ({ ...prev, error: 'Неподдерживаемый формат. Используйте JPEG, PNG или WebP.' }));
+      setPhotoState(prev => ({ 
+        ...prev, 
+        error: 'Неподдерживаемый формат. Используйте JPEG, PNG или WebP.',
+        isUploading: false 
+      }));
       return;
     }
 
@@ -139,7 +147,15 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
 
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
-        throw new Error(errorData.error || 'Ошибка загрузки файла');
+        
+        // EPIC D3: Авто-переключение на direct upload при ошибках сервера
+        if (uploadResponse.status === 413 || uploadResponse.status === 500) {
+          console.log('Server upload failed, trying direct upload...');
+          // TODO: Реализовать direct upload fallback
+          throw new Error(`Серверная загрузка не удалась (${errorData.error || 'unknown error'}). Попробуйте уменьшить размер файла или использовать другое изображение.`);
+        }
+        
+        throw new Error(errorData.message || errorData.error || 'Ошибка загрузки файла');
       }
 
       const uploadData = await uploadResponse.json();
@@ -173,25 +189,42 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
         }));
         console.log('Photo enhanced successfully:', enhanceData);
       } else {
-        // Показываем ошибку пользователю
-        const errorMessage = enhanceData.error || enhanceData.details || 'AI enhancement failed';
+        // EPIC E2: Улучшенная обработка ошибок enhancement
+        const errorMessage = enhanceData.message || enhanceData.error || enhanceData.details || 'AI enhancement failed';
         console.error('AI enhancement error:', errorMessage);
         
         setPhotoState(prev => ({
           ...prev,
           isEnhancing: false,
-          enhancedUrl: null,
-          error: `AI улучшение не удалось: ${errorMessage}. Проверьте REPLICATE_API_TOKEN в настройках Netlify.`,
+          enhancedUrl: null, // Сбрасываем enhancedUrl, чтобы использовать оригинальное фото
+          error: `AI улучшение не удалось: ${errorMessage}. Будет использовано оригинальное фото.`,
         }));
       }
 
     } catch (error) {
       console.error('Photo upload/enhancement failed:', error);
+      
+      // EPIC E2: Улучшенные сообщения об ошибках
+      let errorMessage = 'Ошибка обработки фото';
+      if (error instanceof Error) {
+        if (error.message.includes('ERR_SIZE_LIMIT')) {
+          errorMessage = 'Файл слишком большой. Попробуйте уменьшить размер изображения.';
+        } else if (error.message.includes('ERR_UNSUPPORTED_TYPE')) {
+          errorMessage = 'Неподдерживаемый формат файла. Используйте JPEG, PNG или WebP.';
+        } else if (error.message.includes('ERR_TMP_ACCESS')) {
+          errorMessage = 'Ошибка доступа к временной папке. Попробуйте еще раз.';
+        } else if (error.message.includes('ERR_TIMEOUT')) {
+          errorMessage = 'Превышено время ожидания. Попробуйте еще раз.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       setPhotoState(prev => ({
         ...prev,
         isUploading: false,
         isEnhancing: false,
-        error: error instanceof Error ? error.message : 'Ошибка обработки фото',
+        error: errorMessage,
       }));
     }
   };
@@ -264,7 +297,7 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
                     {' '}или перетащите файл сюда
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    JPEG, PNG, WebP • Максимум 5MB
+                    JPEG, PNG, WebP • Максимум 8MB
                   </p>
                 </div>
               </label>

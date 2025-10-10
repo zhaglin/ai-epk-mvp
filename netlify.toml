@@ -38,10 +38,17 @@
   [headers.values]
     Cache-Control = "public, max-age=3600"
 
+# DECISION-FN-CONFIG-001: Конфигурация функций для загрузки файлов
+[functions]
+  # Увеличиваем таймаут и память для функций загрузки
+  timeout = 25
+  memory = 1024
+
 # Environment variables (добавить через Netlify Dashboard)
 # Обязательные переменные:
 # - OPENAI_API_KEY
 # - REPLICATE_API_TOKEN  
 # - NEXT_PUBLIC_BASE_URL
+# - UPLOAD_STRATEGY (server|direct)
 # https://app.netlify.com/sites/YOUR-SITE/settings/deploys#environment
 

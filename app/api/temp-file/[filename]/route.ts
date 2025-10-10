@@ -3,6 +3,10 @@ import { readFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
 
+// DECISION-UPLOAD-RUNTIME-001: Принудительный Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ filename: string }> }
@@ -18,13 +22,13 @@ export async function GET(
       );
     }
     
-    // На Netlify используем /tmp
+    // DECISION-TMP-STORAGE-001: Используем /tmp/artistone
     const uploadsDir = process.env.NETLIFY 
-      ? '/tmp/uploads'
+      ? '/tmp/artistone/uploads'
       : join(process.cwd(), 'tmp', 'uploads');
     
     const generatedDir = process.env.NETLIFY
-      ? '/tmp/generated'
+      ? '/tmp/artistone/generated'
       : join(process.cwd(), 'public', 'generated');
     
     // Ищем файл сначала в uploads, потом в generated

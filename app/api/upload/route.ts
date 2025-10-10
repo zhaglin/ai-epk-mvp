@@ -4,21 +4,25 @@ import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-// Максимальный размер файла: 2MB (уменьшено для Netlify)
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+// DECISION-UPLOAD-RUNTIME-001: Принудительный Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+// DECISION-SIZE-LIMITS-001: Лимиты клиент ≤ 8 MB, сервер ≤ 10 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB для сервера
+const CLIENT_MAX_SIZE = 8 * 1024 * 1024; // 8MB для клиента
 
 // Поддерживаемые типы изображений
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-// Создаем директории для хранения файлов
+// DECISION-TMP-STORAGE-001: Временное хранилище — /tmp/artistone/uploads
 async function ensureDirectories() {
-  // На Netlify используем /tmp для временных файлов
   const uploadsDir = process.env.NETLIFY 
-    ? '/tmp/uploads'
+    ? '/tmp/artistone/uploads'
     : join(process.cwd(), 'tmp', 'uploads');
   
   const generatedDir = process.env.NETLIFY
-    ? '/tmp/generated'
+    ? '/tmp/artistone/generated'
     : join(process.cwd(), 'public', 'generated');
   
   console.log('[Upload] Creating directories:', {
@@ -68,10 +72,11 @@ export async function POST(request: NextRequest) {
       type: file.type
     });
     
-    // Валидация размера файла
+    // DECISION-SIZE-LIMITS-001: Валидация размера файла
     console.log('[Upload] File size validation:', {
       fileSize: file.size,
       maxSize: MAX_FILE_SIZE,
+      clientMaxSize: CLIENT_MAX_SIZE,
       isTooLarge: file.size > MAX_FILE_SIZE
     });
     
@@ -79,11 +84,13 @@ export async function POST(request: NextRequest) {
       console.log('[Upload] File too large, rejecting upload');
       return NextResponse.json(
         { 
-          error: 'File too large. Maximum size is 2MB.',
+          error: 'ERR_SIZE_LIMIT',
+          message: `Файл слишком большой (${Math.round(file.size / 1024 / 1024)} MB). Максимальный размер: ${Math.round(MAX_FILE_SIZE / 1024 / 1024)} MB.`,
           fileSize: file.size,
-          maxSize: MAX_FILE_SIZE 
+          maxSize: MAX_FILE_SIZE,
+          requestId: uuidv4()
         },
-        { status: 400 }
+        { status: 413 }
       );
     }
     
@@ -91,8 +98,10 @@ export async function POST(request: NextRequest) {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         { 
-          error: 'Unsupported file type. Please use JPEG, PNG, or WebP.',
-          allowedTypes: ALLOWED_TYPES 
+          error: 'ERR_UNSUPPORTED_TYPE',
+          message: `Неподдерживаемый формат файла. Используйте JPEG, PNG или WebP.`,
+          allowedTypes: ALLOWED_TYPES,
+          requestId: uuidv4()
         },
         { status: 400 }
       );
@@ -159,7 +168,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Upload] Error uploading file:', error);
     
-    // Детальная информация об ошибке для диагностики
+    // DECISION-E1: Унифицированные ответы ошибок
+    const requestId = uuidv4();
     const errorDetails = {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
@@ -167,19 +177,41 @@ export async function POST(request: NextRequest) {
       environment: {
         isNetlify: !!process.env.NETLIFY,
         nodeEnv: process.env.NODE_ENV,
-        platform: process.platform
+        platform: process.platform,
+        runtime: 'nodejs'
       }
     };
     
-    console.error('[Upload] Detailed error info:', errorDetails);
+    console.error('[Upload] Detailed error info:', {
+      requestId,
+      ...errorDetails
+    });
+    
+    // Определяем тип ошибки
+    let errorCode = 'ERR_UPLOAD_FAILED';
+    let statusCode = 500;
+    let userMessage = 'Ошибка при загрузке файла. Попробуйте еще раз.';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('ENOENT')) {
+        errorCode = 'ERR_TMP_ACCESS';
+        userMessage = 'Ошибка доступа к временной папке.';
+      } else if (error.message.includes('timeout')) {
+        errorCode = 'ERR_TIMEOUT';
+        userMessage = 'Превышено время ожидания загрузки.';
+        statusCode = 408;
+      }
+    }
     
     return NextResponse.json(
       { 
-        error: 'Failed to upload file',
+        error: errorCode,
+        message: userMessage,
+        requestId,
         details: errorDetails.message,
         debug: process.env.NODE_ENV === 'development' ? errorDetails : undefined
       },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }

@@ -1,23 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// DECISION-UPLOAD-RUNTIME-001: Принудительный Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
- * Debug endpoint для диагностики проблем на Netlify
+ * EPIC E: Debug endpoint для диагностики проблем на Netlify
  */
 export async function GET(request: NextRequest) {
   try {
+    // EPIC E3: Обновленный debug endpoint
     const debugInfo = {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
       isNetlify: !!process.env.NETLIFY,
+      runtime: 'nodejs', // Подтверждаем runtime
       // Проверяем переменные окружения (без значений для безопасности)
       hasOpenAI: !!process.env.OPENAI_API_KEY,
       hasReplicate: !!process.env.REPLICATE_API_TOKEN,
       hasBaseUrl: !!process.env.NEXT_PUBLIC_BASE_URL,
+      // EPIC D: Проверяем стратегию загрузки
+      uploadStrategy: process.env.UPLOAD_STRATEGY || 'server',
       // Информация о системе
       platform: process.platform,
       nodeVersion: process.version,
-      // Проверяем доступность директорий
-      tmpDir: process.env.NETLIFY ? '/tmp' : process.cwd() + '/tmp',
+      // DECISION-TMP-STORAGE-001: Проверяем доступность директорий
+      tmpDir: process.env.NETLIFY ? '/tmp/artistone' : process.cwd() + '/tmp',
+      uploadsDir: process.env.NETLIFY ? '/tmp/artistone/uploads' : process.cwd() + '/tmp/uploads',
+      generatedDir: process.env.NETLIFY ? '/tmp/artistone/generated' : process.cwd() + '/public/generated',
+      // Лимиты
+      maxFileSize: process.env.NETLIFY ? '10MB' : '10MB',
+      clientMaxSize: '8MB',
       // Информация о запросе
       userAgent: request.headers.get('user-agent'),
       origin: request.headers.get('origin'),

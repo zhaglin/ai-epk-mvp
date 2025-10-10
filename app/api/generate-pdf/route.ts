@@ -5,6 +5,10 @@ import { generateHTMLTemplate } from '@/lib/pdf-html-template';
 import { generatePDFFallback } from '@/lib/pdf-fallback';
 import { ArtistData } from '@/types';
 
+// DECISION-UPLOAD-RUNTIME-001: Принудительный Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   let browser = null;
   let artistData: ArtistData | null = null;

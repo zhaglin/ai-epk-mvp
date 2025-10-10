@@ -12,6 +12,10 @@ import {
 } from '@/lib/aiImage';
 import sharp from 'sharp';
 
+// DECISION-UPLOAD-RUNTIME-001: Принудительный Node.js runtime
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { fileId, fileName, style, intensity, seed } = await request.json();
@@ -34,9 +38,9 @@ export async function POST(request: NextRequest) {
     });
     
     // Читаем временный файл
-    // На Netlify используем /tmp
+    // DECISION-TMP-STORAGE-001: Используем /tmp/artistone
     const uploadsDir = process.env.NETLIFY 
-      ? '/tmp/uploads'
+      ? '/tmp/artistone/uploads'
       : join(process.cwd(), 'tmp', 'uploads');
     
     const tempFilePath = join(uploadsDir, actualFileName);
@@ -118,9 +122,9 @@ export async function POST(request: NextRequest) {
     // Создаем уникальное имя для финального файла
     const finalFileName = `enhanced_${fileId}_${Date.now()}.jpg`;
     
-    // На Netlify сохраняем в /tmp, на локальной машине - в public
+    // DECISION-TMP-STORAGE-001: На Netlify сохраняем в /tmp/artistone
     const generatedDir = process.env.NETLIFY
-      ? '/tmp/generated'
+      ? '/tmp/artistone/generated'
       : join(process.cwd(), 'public', 'generated');
     
     // Создаем директорию если нужно
