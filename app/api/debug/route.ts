@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       // Проверяем доступность директорий
       tmpDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp' : process.cwd() + '/tmp',
       uploadsDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp/uploads' : process.cwd() + '/tmp/uploads',
-      generatedDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp/generated' : process.cwd() + '/public/generated',
+      generatedDir: (process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME) ? '/tmp' : process.cwd() + '/public/generated',
       // Лимиты
       maxFileSize: '10MB',
       clientMaxSize: '8MB',
