@@ -12,8 +12,14 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // Создаем директории для хранения файлов
 async function ensureDirectories() {
-  const uploadsDir = join(process.cwd(), 'tmp', 'uploads');
-  const generatedDir = join(process.cwd(), 'public', 'generated');
+  // На Netlify используем /tmp для временных файлов
+  const uploadsDir = process.env.NETLIFY 
+    ? '/tmp/uploads'
+    : join(process.cwd(), 'tmp', 'uploads');
+  
+  const generatedDir = process.env.NETLIFY
+    ? '/tmp/generated'
+    : join(process.cwd(), 'public', 'generated');
   
   try {
     await mkdir(uploadsDir, { recursive: true });
@@ -21,6 +27,8 @@ async function ensureDirectories() {
   } catch (error) {
     // Директории уже существуют
   }
+  
+  return { uploadsDir, generatedDir };
 }
 
 export async function POST(request: NextRequest) {
@@ -89,11 +97,11 @@ export async function POST(request: NextRequest) {
       optimizedSize: optimizedBuffer.length
     });
     
-    // Создаем директории
-    await ensureDirectories();
+    // Создаем директории и получаем пути
+    const { uploadsDir } = await ensureDirectories();
     
     // Сохраняем файл во временную папку
-    const tempPath = join(process.cwd(), 'tmp', 'uploads', fileName);
+    const tempPath = join(uploadsDir, fileName);
     await writeFile(tempPath, optimizedBuffer);
     
     // Создаем URL для доступа к файлу

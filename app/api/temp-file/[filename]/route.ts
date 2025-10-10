@@ -18,14 +18,27 @@ export async function GET(
       );
     }
     
-    const filePath = join(process.cwd(), 'tmp', 'uploads', filename);
+    // На Netlify используем /tmp
+    const uploadsDir = process.env.NETLIFY 
+      ? '/tmp/uploads'
+      : join(process.cwd(), 'tmp', 'uploads');
     
-    // Проверяем существование файла
+    const generatedDir = process.env.NETLIFY
+      ? '/tmp/generated'
+      : join(process.cwd(), 'public', 'generated');
+    
+    // Ищем файл сначала в uploads, потом в generated
+    let filePath = join(uploadsDir, filename);
+    
     if (!existsSync(filePath)) {
-      return NextResponse.json(
-        { error: 'File not found' },
-        { status: 404 }
-      );
+      filePath = join(generatedDir, filename);
+      
+      if (!existsSync(filePath)) {
+        return NextResponse.json(
+          { error: 'File not found' },
+          { status: 404 }
+        );
+      }
     }
     
     // Читаем файл
@@ -82,7 +95,12 @@ export async function DELETE(
       );
     }
     
-    const filePath = join(process.cwd(), 'tmp', 'uploads', filename);
+    // На Netlify используем /tmp
+    const uploadsDir = process.env.NETLIFY 
+      ? '/tmp/uploads'
+      : join(process.cwd(), 'tmp', 'uploads');
+    
+    const filePath = join(uploadsDir, filename);
     
     if (existsSync(filePath)) {
       await unlink(filePath);

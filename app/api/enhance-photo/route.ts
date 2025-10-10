@@ -34,7 +34,12 @@ export async function POST(request: NextRequest) {
     });
     
     // Читаем временный файл
-    const tempFilePath = join(process.cwd(), 'tmp', 'uploads', actualFileName);
+    // На Netlify используем /tmp
+    const uploadsDir = process.env.NETLIFY 
+      ? '/tmp/uploads'
+      : join(process.cwd(), 'tmp', 'uploads');
+    
+    const tempFilePath = join(uploadsDir, actualFileName);
     
     if (!existsSync(tempFilePath)) {
       return NextResponse.json(
@@ -112,12 +117,28 @@ export async function POST(request: NextRequest) {
     
     // Создаем уникальное имя для финального файла
     const finalFileName = `enhanced_${fileId}_${Date.now()}.jpg`;
-    const finalPath = join(process.cwd(), 'public', 'generated', finalFileName);
     
+    // На Netlify сохраняем в /tmp, на локальной машине - в public
+    const generatedDir = process.env.NETLIFY
+      ? '/tmp/generated'
+      : join(process.cwd(), 'public', 'generated');
+    
+    // Создаем директорию если нужно
+    const { mkdir } = await import('fs/promises');
+    try {
+      await mkdir(generatedDir, { recursive: true });
+    } catch (err) {
+      // Директория уже существует
+    }
+    
+    const finalPath = join(generatedDir, finalFileName);
     await writeFile(finalPath, optimizedBuffer);
     
     // Создаем URL для доступа к улучшенному изображению
-    const enhancedUrl = `/generated/${finalFileName}`;
+    // На Netlify используем API endpoint, локально - direct link
+    const enhancedUrl = process.env.NETLIFY
+      ? `/api/temp-file/${finalFileName}`
+      : `/generated/${finalFileName}`;
     
            console.log('[Enhance] Enhancement completed successfully:', {
              fileId,
