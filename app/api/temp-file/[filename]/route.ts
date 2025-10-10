@@ -30,7 +30,7 @@ export async function GET(
               : join(process.cwd(), 'tmp', 'uploads');
             
             const generatedDir = isNetlify
-              ? '/tmp/generated'
+              ? '/tmp'
               : join(process.cwd(), 'public', 'generated');
     
     // Ищем файл сначала в uploads, потом в generated

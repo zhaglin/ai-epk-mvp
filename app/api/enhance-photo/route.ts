@@ -124,9 +124,9 @@ export async function POST(request: NextRequest) {
     // Создаем уникальное имя для финального файла
     const finalFileName = `enhanced_${fileId}_${Date.now()}.jpg`;
     
-    // На Netlify сохраняем в /tmp/generated
+    // На Netlify используем /tmp, локально - public/generated
     const generatedDir = isNetlify
-      ? '/tmp/generated'
+      ? '/tmp'
       : join(process.cwd(), 'public', 'generated');
     
     // Создаем директорию если нужно
