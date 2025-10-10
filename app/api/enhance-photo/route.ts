@@ -140,16 +140,24 @@ export async function POST(request: NextRequest) {
     const finalPath = join(generatedDir, finalFileName);
     await writeFile(finalPath, optimizedBuffer);
     
-    // Создаем URL для доступа к улучшенному изображению
-    // На Netlify используем API endpoint, локально - direct link
-    const enhancedUrl = process.env.NETLIFY
-      ? `/api/temp-file/${finalFileName}`
-      : `/generated/${finalFileName}`;
+    // На Netlify возвращаем base64, локально - URL файла
+    let enhancedUrl: string;
+    const isNetlifyEnv = process.env.NODE_ENV === 'production' && process.platform === 'linux' && !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    
+    if (isNetlifyEnv) {
+      // Конвертируем в base64 для Netlify (Lambda контейнеры изолированы)
+      const base64Image = optimizedBuffer.toString('base64');
+      enhancedUrl = `data:image/jpeg;base64,${base64Image}`;
+      console.log('[Enhance] Returning base64 image for Netlify (size: ' + Math.round(base64Image.length / 1024) + ' KB)');
+    } else {
+      // Локально используем файловую систему
+      enhancedUrl = `/generated/${finalFileName}`;
+    }
     
            console.log('[Enhance] Enhancement completed successfully:', {
              fileId,
              finalFileName,
-             enhancedUrl,
+             enhancedUrl: isNetlifyEnv ? 'data:image/jpeg;base64,...' : enhancedUrl,
              processingTime: processingTime
            });
     
