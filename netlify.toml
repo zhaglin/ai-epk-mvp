@@ -5,11 +5,43 @@
 
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
 
-# Next.js Runtime - Essential for Next.js 13+
+# Next.js Runtime - Essential for Next.js 15+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Environment variables (добавить OPENAI_API_KEY через Netlify Dashboard)
+# Редиректы для корректной работы Next.js
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Заголовки безопасности
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Кэширование статических ассетов
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/generated/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# Environment variables (добавить через Netlify Dashboard)
+# Обязательные переменные:
+# - OPENAI_API_KEY
+# - REPLICATE_API_TOKEN  
+# - NEXT_PUBLIC_BASE_URL
 # https://app.netlify.com/sites/YOUR-SITE/settings/deploys#environment
 
