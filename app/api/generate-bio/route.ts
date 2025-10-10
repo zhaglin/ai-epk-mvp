@@ -13,8 +13,6 @@ const openai = new OpenAI({
  * Генерирует профессиональное BIO артиста с помощью GPT
  */
 export async function POST(request: NextRequest) {
-  let artistInput: ArtistInput | null = null;
-  
   try {
     // 1. Парсинг тела запроса
     const body = await request.json();
@@ -27,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    artistInput = body;
+    const artistInput: ArtistInput = body;
 
     // 3. Формирование промптов
     const userPrompt = generateUserPrompt(artistInput);
@@ -69,12 +67,18 @@ export async function POST(request: NextRequest) {
     console.error('Ошибка генерации BIO:', error);
 
     // Обработка различных типов ошибок
-    if (error instanceof OpenAI.APIError && artistInput) {
-      console.log('OpenAI API недоступен, используем fallback генерацию...');
+    if (error instanceof OpenAI.APIError) {
+      console.error('OpenAI API Error:', {
+        status: error.status,
+        message: error.message,
+        code: error.code,
+        type: error.type
+      });
       
-      // Fallback: простая генерация без AI
-      const fallbackBio = generateFallbackBio(artistInput);
-      return NextResponse.json(fallbackBio, { status: 200 });
+      return NextResponse.json(
+        { error: `Ошибка OpenAI API: ${error.message}` },
+        { status: error.status || 500 }
+      );
     }
 
     if (error instanceof SyntaxError) {
@@ -91,26 +95,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Fallback генерация BIO без AI
- */
-function generateFallbackBio(artistInput: ArtistInput): GeneratedBio {
-  const { name, city, genres, venues, style, skills, achievements } = artistInput;
-  
-  const genreText = Array.isArray(genres) ? genres.join(', ') : genres;
-  
-  return {
-    pitch: `${name} — талантливый ${genreText.toLowerCase()} артист из ${city}, создающий уникальные звуковые ландшафты, которые захватывают слушателей с первых нот.`,
-    bio: `${name} представляет собой яркое явление в мире ${genreText.toLowerCase()} музыки. Базируясь в ${city}, артист развивает свой уникальный стиль, сочетая ${style}. Техническое мастерство ${name} проявляется в ${skills}, что позволяет создавать глубокие и эмоциональные композиции. ${achievements} — это лишь начало большого творческого пути артиста, который продолжает удивлять и вдохновлять аудиторию по всему миру.`,
-    highlights: [
-      `Выступления в ${venues}`,
-      `Уникальный стиль: ${style}`,
-      `Технические навыки: ${skills}`,
-      achievements,
-      `Активная деятельность в ${city}`
-    ]
-  };
-}
 
 /**
  * Валидация входных данных типа ArtistInput

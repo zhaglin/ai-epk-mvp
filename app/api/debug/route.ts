@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
       runtime: 'nodejs', // Подтверждаем runtime
       // Проверяем переменные окружения (без значений для безопасности)
       hasOpenAI: !!process.env.OPENAI_API_KEY,
+      openAiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
+      openAiKeyPrefix: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) : null,
       hasReplicate: !!process.env.REPLICATE_API_TOKEN,
+      replicateKeyLength: process.env.REPLICATE_API_TOKEN ? process.env.REPLICATE_API_TOKEN.length : 0,
       hasBaseUrl: !!process.env.NEXT_PUBLIC_BASE_URL,
       // EPIC D: Проверяем стратегию загрузки
       uploadStrategy: process.env.UPLOAD_STRATEGY || 'server',
@@ -73,6 +76,50 @@ export async function POST(request: NextRequest) {
         message: hasToken ? 'Replicate token is configured' : 'Replicate token is missing',
         hasToken
       });
+    }
+
+    if (testType === 'openai') {
+      // Тестируем OpenAI API
+      const hasKey = !!process.env.OPENAI_API_KEY;
+      const keyLength = process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0;
+      
+      if (!hasKey || keyLength === 0) {
+        return NextResponse.json({
+          status: 'error',
+          message: 'OpenAI API key is missing or empty',
+          hasKey,
+          keyLength
+        });
+      }
+
+      try {
+        // Тестируем реальный запрос к OpenAI
+        const response = await fetch('https://api.openai.com/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        
+        return NextResponse.json({
+          status: response.ok ? 'success' : 'error',
+          message: response.ok ? 'OpenAI API key is valid' : 'OpenAI API key is invalid',
+          httpStatus: response.status,
+          error: data.error || null,
+          hasKey,
+          keyLength
+        });
+      } catch (error) {
+        return NextResponse.json({
+          status: 'error',
+          message: 'Failed to test OpenAI API',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          hasKey,
+          keyLength
+        });
+      }
     }
 
     return NextResponse.json({
