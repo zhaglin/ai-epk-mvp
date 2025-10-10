@@ -11,13 +11,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Редиректы для корректной работы Next.js
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
-
 # Заголовки безопасности
 [[headers]]
   for = "/*"
@@ -39,9 +32,16 @@
     Cache-Control = "public, max-age=3600"
 
 # DECISION-FN-CONFIG-001: Конфигурация функций для загрузки файлов
-[functions]
-  # Увеличиваем таймаут и память для функций загрузки
+[functions."app/api/upload"]
   timeout = 25
+  memory = 1024
+
+[functions."app/api/enhance-photo"]
+  timeout = 30
+  memory = 1024
+
+[functions."app/api/generate-pdf"]
+  timeout = 30
   memory = 1024
 
 # Environment variables (добавить через Netlify Dashboard)
