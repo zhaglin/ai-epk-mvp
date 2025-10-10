@@ -173,13 +173,16 @@ export default function ArtistForm({ onSubmit, isLoading = false }: ArtistFormPr
         }));
         console.log('Photo enhanced successfully:', enhanceData);
       } else {
-        // Fallback на оригинальное фото
+        // Показываем ошибку пользователю
+        const errorMessage = enhanceData.error || enhanceData.details || 'AI enhancement failed';
+        console.error('AI enhancement error:', errorMessage);
+        
         setPhotoState(prev => ({
           ...prev,
           isEnhancing: false,
           enhancedUrl: null,
+          error: `AI улучшение не удалось: ${errorMessage}. Проверьте REPLICATE_API_TOKEN в настройках Netlify.`,
         }));
-        console.log('AI enhancement failed, using original photo');
       }
 
     } catch (error) {
