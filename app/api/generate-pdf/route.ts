@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     let textLen = await page.evaluate(() => document.body.innerText.trim().length);
     if (textLen < 10) {
       console.warn('[PDF] Content empty, retrying after extra wait...');
-      await page.waitForTimeout(1500);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       await page.evaluateHandle('document.fonts.ready');
       await page.waitForFunction(
         () => {
