@@ -1,5 +1,7 @@
 import { ArtistData } from '@/types';
-import { PDFDocument, rgb, StandardFonts, RotationTypes } from 'pdf-lib';
+import { PDFDocument, rgb, RotationTypes } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
 
 // Fallback PDF генератор: локально собираем PDF без Chromium
 export async function generatePDFFallback(artistData: ArtistData): Promise<Buffer> {
@@ -7,12 +9,37 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 points
 
+    // Load Cyrillic-capable fonts (Noto Sans) from public/fonts
+    // We read from the deployed bundle's working directory
+    const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+    const regularFontPath = path.join(fontsDir, 'NotoSans-Regular.ttf');
+    const boldFontPath = path.join(fontsDir, 'NotoSans-Bold.ttf');
+
+    let regularFontBytes: Uint8Array | null = null;
+    let boldFontBytes: Uint8Array | null = null;
+    try {
+      regularFontBytes = fs.readFileSync(regularFontPath);
+      boldFontBytes = fs.readFileSync(boldFontPath);
+    } catch {
+      // If reading from filesystem fails (serverless layout), try fallback relative paths
+      try {
+        const altRegular = path.resolve('public/fonts/NotoSans-Regular.ttf');
+        const altBold = path.resolve('public/fonts/NotoSans-Bold.ttf');
+        regularFontBytes = fs.readFileSync(altRegular);
+        boldFontBytes = fs.readFileSync(altBold);
+      } catch {}
+    }
+
+    // Embed fonts; if unavailable, pdf-lib will still allow standard fonts but Cyrillic may not render
+    const regularFont = regularFontBytes ? await pdfDoc.embedFont(regularFontBytes) : undefined;
+    const boldFont = boldFontBytes ? await pdfDoc.embedFont(boldFontBytes) : regularFont;
+
     // Фон
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: page.getHeight(), color: rgb(1, 1, 1) });
 
     // Водяной знак
     const watermark = 'ARTISTONE';
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const font = boldFont || (regularFont as any);
     const fontSizeWatermark = 64;
     const textWidth = font.widthOfTextAtSize(watermark, fontSizeWatermark);
     const textHeight = font.heightAtSize(fontSizeWatermark);
@@ -28,11 +55,11 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
 
     // Заголовок
     const titleSize = 22;
-    page.drawText(`EPK — ${artistData.name}`, { x: 48, y: 780, size: titleSize, font, color: rgb(0.12, 0.19, 0.35) });
+    page.drawText(`EPK — ${artistData.name}`, { x: 48, y: 780, size: titleSize, font: font || undefined, color: rgb(0.12, 0.19, 0.35) });
 
     // Подзаголовок
-    const subFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    page.drawText(`${artistData.city} • ${artistData.genres.join(', ')}`, { x: 48, y: 758, size: 12, font: subFont, color: rgb(0.25, 0.4, 0.8) });
+    const subFont = regularFont || font;
+    page.drawText(`${artistData.city} • ${artistData.genres.join(', ')}`, { x: 48, y: 758, size: 12, font: subFont || undefined, color: rgb(0.25, 0.4, 0.8) });
 
     // Фото, если есть data URL (jpeg/png)
     let nextY = 720;
@@ -54,11 +81,11 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
     const left = 48;
     let y = 700;
     const writeBlock = (title: string, text: string) => {
-      page.drawText(title, { x: left, y, size: 12, font, color: rgb(0.12, 0.19, 0.35) });
+      page.drawText(title, { x: left, y, size: 12, font: font || undefined, color: rgb(0.12, 0.19, 0.35) });
       y -= 16;
       const wrapped = wrapText(text || '', 80);
       wrapped.forEach((line) => {
-        page.drawText(line, { x: left, y, size: 11, font: subFont, color: rgb(0.21, 0.22, 0.25) });
+        page.drawText(line, { x: left, y, size: 11, font: subFont || undefined, color: rgb(0.21, 0.22, 0.25) });
         y -= 14;
       });
       y -= 8;
@@ -75,7 +102,7 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
     writeBlock('Ссылки', linksList);
 
     // Footer
-    page.drawText('Создано с помощью ArtistOne', { x: left, y: 36, size: 10, font: subFont, color: rgb(0.55, 0.58, 0.62) });
+    page.drawText('Создано с помощью ArtistOne', { x: left, y: 36, size: 10, font: subFont || undefined, color: rgb(0.55, 0.58, 0.62) });
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
