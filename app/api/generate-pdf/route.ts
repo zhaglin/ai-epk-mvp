@@ -87,11 +87,9 @@ export async function POST(request: NextRequest) {
     
     console.log('[PDF] Setting content...');
 
-    // Устанавливаем HTML контент
-    await page.setContent(htmlContent, {
-      waitUntil: ['domcontentloaded'],
-      timeout: 30000,
-    });
+    // Загружаем как data: URL — стабильнее для serverless
+    const dataUrl = 'data:text/html;charset=utf-8,' + encodeURIComponent(htmlContent);
+    await page.goto(dataUrl, { waitUntil: ['load', 'networkidle0'], timeout: 30000 });
 
     // Эмулируем экран для корректной печати CSS
     await page.emulateMediaType('screen');
@@ -115,6 +113,13 @@ export async function POST(request: NextRequest) {
 
     // Дополнительно ждем отрисовку
     await page.waitForSelector('body .container', { timeout: 5000 });
+    await page.waitForFunction(
+      () => {
+        const el = document.querySelector('body');
+        return !!el && el.getBoundingClientRect().height > 0 && el.innerText.trim().length > 0;
+      },
+      { timeout: 5000 }
+    );
     
     console.log('[PDF] Generating PDF...');
 
