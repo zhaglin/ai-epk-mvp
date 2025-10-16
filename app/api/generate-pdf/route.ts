@@ -121,24 +121,37 @@ export async function POST(request: NextRequest) {
       { timeout: 5000 }
     );
 
-    // Если контент подозрительно пустой — используем локальный fallback (pdf-lib)
-    const textLen = await page.evaluate(() => document.body.innerText.trim().length);
+    // Если контент подозрительно пустой — попробуем один ретрай с дополнительным ожиданием
+    let textLen = await page.evaluate(() => document.body.innerText.trim().length);
     if (textLen < 10) {
-      console.warn('[PDF] Page text length is too small, using pdf-lib fallback');
-      await browser.close();
-      browser = null;
-      const pdfBuffer = await generatePDFFallback(artistData);
-      const slug = artistData.name
-        .replace(/\s+/g, '_')
-        .replace(/[^a-zA-Z0-9_-]/g, '');
-      return new NextResponse(Buffer.from(pdfBuffer), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
-          'Cache-Control': 'no-cache',
+      console.warn('[PDF] Content empty, retrying after extra wait...');
+      await page.waitForTimeout(1500);
+      await page.evaluateHandle('document.fonts.ready');
+      await page.waitForFunction(
+        () => {
+          const el = document.querySelector('body');
+          return !!el && el.getBoundingClientRect().height > 0 && el.innerText.trim().length > 0;
         },
-      });
+        { timeout: 5000 }
+      );
+      textLen = await page.evaluate(() => document.body.innerText.trim().length);
+      if (textLen < 10) {
+        console.warn('[PDF] Still empty after retry, using pdf-lib fallback');
+        await browser.close();
+        browser = null;
+        const pdfBuffer = await generatePDFFallback(artistData);
+        const slug = artistData.name
+          .replace(/\s+/g, '_')
+          .replace(/[^a-zA-Z0-9_-]/g, '');
+        return new NextResponse(Buffer.from(pdfBuffer), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
+            'Cache-Control': 'no-cache',
+          },
+        });
+      }
     }
     
     console.log('[PDF] Generating PDF...');

@@ -1,7 +1,8 @@
 import { ArtistData } from '@/types';
-import { PDFDocument, rgb, RotationTypes } from 'pdf-lib';
+import { PDFDocument, rgb, RotationTypes, StandardFonts } from 'pdf-lib';
 import fs from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 
 // Fallback PDF генератор: локально собираем PDF без Chromium
 export async function generatePDFFallback(artistData: ArtistData): Promise<Buffer> {
@@ -9,8 +10,8 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 points
 
-    // Load Cyrillic-capable fonts (Noto Sans) from public/fonts
-    // We read from the deployed bundle's working directory
+    // Load Cyrillic-capable fonts (Noto Sans) from public/fonts or over HTTP
+    // 1) Try filesystem paths (useful locally)
     const fontsDir = path.join(process.cwd(), 'public', 'fonts');
     const regularFontPath = path.join(fontsDir, 'NotoSans-Regular.ttf');
     const boldFontPath = path.join(fontsDir, 'NotoSans-Bold.ttf');
@@ -21,7 +22,7 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
       regularFontBytes = fs.readFileSync(regularFontPath);
       boldFontBytes = fs.readFileSync(boldFontPath);
     } catch {
-      // If reading from filesystem fails (serverless layout), try fallback relative paths
+      // 2) Fallback: try relative paths
       try {
         const altRegular = path.resolve('public/fonts/NotoSans-Regular.ttf');
         const altBold = path.resolve('public/fonts/NotoSans-Bold.ttf');
@@ -30,9 +31,35 @@ export async function generatePDFFallback(artistData: ArtistData): Promise<Buffe
       } catch {}
     }
 
+    // 3) Final fallback: fetch from site origin
+    if (!regularFontBytes || !boldFontBytes) {
+      try {
+        const origin = process.env.NEXT_PUBLIC_BASE_URL || 'https://artist-one.netlify.app';
+        const [regRes, boldRes] = await Promise.all([
+          fetch(`${origin}/fonts/NotoSans-Regular.ttf`),
+          fetch(`${origin}/fonts/NotoSans-Bold.ttf`),
+        ]);
+        if (regRes.ok) {
+          const buf = await regRes.arrayBuffer();
+          regularFontBytes = new Uint8Array(buf);
+        }
+        if (boldRes.ok) {
+          const buf = await boldRes.arrayBuffer();
+          boldFontBytes = new Uint8Array(buf);
+        }
+      } catch {}
+    }
+
     // Embed fonts; if unavailable, pdf-lib will still allow standard fonts but Cyrillic may not render
-    const regularFont = regularFontBytes ? await pdfDoc.embedFont(regularFontBytes) : undefined;
-    const boldFont = boldFontBytes ? await pdfDoc.embedFont(boldFontBytes) : regularFont;
+    let regularFont = regularFontBytes ? await pdfDoc.embedFont(regularFontBytes) : undefined;
+    let boldFont = boldFontBytes ? await pdfDoc.embedFont(boldFontBytes) : undefined;
+    // As a safety net, embed StandardFonts to avoid crashes if Noto is unavailable
+    if (!regularFont || !boldFont) {
+      const stdRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const stdBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      regularFont = regularFont || stdRegular;
+      boldFont = boldFont || stdBold;
+    }
 
     // Фон
     page.drawRectangle({ x: 0, y: 0, width: page.getWidth(), height: page.getHeight(), color: rgb(1, 1, 1) });
