@@ -105,24 +105,10 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
       display: inline-flex;
       align-items: center;
       margin-bottom: 20px;
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: 1px;
+      gap: 12px;
     }
-    
-    .logo-icon {
-      width: 28px;
-      height: 28px;
-      background: white;
-      border-radius: 6px;
-      margin-right: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      font-weight: 900;
-      color: #3b82f6;
-    }
+    .logo img { height: 28px; display: block; }
+    .logo span { font-size: 16px; font-weight: 700; letter-spacing: 1px; }
     
     .header h1 {
       font-size: 32px;
@@ -333,7 +319,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     <div class="header">
       <div class="header-content">
         <div class="logo">
-          <div class="logo-icon">A</div>
+          <img src="${baseUrl}/brand/artistone-logo.svg" alt="ArtistOne" />
           <span>ArtistOne</span>
         </div>
         <h1>${name}</h1>
@@ -397,7 +383,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     </div>
     
     <!-- Watermark -->
-    <div class="watermark">ARTISTONE</div>
+    <div class="watermark">ArtistOne — AI EPK</div>
   </div>
 </body>
 </html>
