@@ -1,4 +1,6 @@
 import { ArtistData } from '@/types';
+import fs from 'fs';
+import path from 'path';
 
 // HTML шаблон для генерации PDF с полной поддержкой кириллицы
 export function generateHTMLTemplate(artistData: ArtistData): string {
@@ -9,6 +11,19 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+  // Try to inline fonts as base64 to avoid external fetches in Chromium
+  let notoSansRegularSrc = `${baseUrl}/fonts/NotoSans-Regular.ttf`;
+  let notoSansBoldSrc = `${baseUrl}/fonts/NotoSans-Bold.ttf`;
+  try {
+    const fontsDir = path.join(process.cwd(), 'public', 'fonts');
+    const regPath = path.join(fontsDir, 'NotoSans-Regular.ttf');
+    const boldPath = path.join(fontsDir, 'NotoSans-Bold.ttf');
+    const regBytes = fs.readFileSync(regPath);
+    const boldBytes = fs.readFileSync(boldPath);
+    notoSansRegularSrc = `data:font/ttf;base64,${Buffer.from(regBytes).toString('base64')}`;
+    notoSansBoldSrc = `data:font/ttf;base64,${Buffer.from(boldBytes).toString('base64')}`;
+  } catch {}
   const resolvedPhoto = photoUrl
     ? (photoUrl.startsWith('data:')
         ? photoUrl
@@ -30,7 +45,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     /* Регистрация кириллических шрифтов */
     @font-face {
       font-family: 'Noto Sans';
-      src: url('${baseUrl}/fonts/NotoSans-Regular.ttf') format('truetype');
+      src: url('${notoSansRegularSrc}') format('truetype');
       font-weight: 400;
       font-style: normal;
       font-display: swap;
@@ -38,7 +53,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     }
     @font-face {
       font-family: 'Noto Sans';
-      src: url('${baseUrl}/fonts/NotoSans-Bold.ttf') format('truetype');
+      src: url('${notoSansBoldSrc}') format('truetype');
       font-weight: 700;
       font-style: normal;
       font-display: swap;
