@@ -23,7 +23,27 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EPK - ${name}</title>
   
+  <!-- Предзагрузка шрифтов для кириллицы -->
+  <link rel="preload" href="${baseUrl}/fonts/NotoSans-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="${baseUrl}/fonts/NotoSans-Bold.ttf" as="font" type="font/ttf" crossorigin>
   <style>
+    /* Регистрация кириллических шрифтов */
+    @font-face {
+      font-family: 'Noto Sans';
+      src: url('${baseUrl}/fonts/NotoSans-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+      unicode-range: U+0400-04FF, U+0000-00FF;
+    }
+    @font-face {
+      font-family: 'Noto Sans';
+      src: url('${baseUrl}/fonts/NotoSans-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+      unicode-range: U+0400-04FF, U+0000-00FF;
+    }
     /* Настройка страницы для PDF */
     @page {
       size: A4;
@@ -37,7 +57,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     }
     
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
+      font-family: "Noto Sans", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
       font-size: 13px;
       line-height: 1.6;
       color: #1f2937;
