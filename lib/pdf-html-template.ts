@@ -47,7 +47,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     /* Настройка страницы для PDF */
     @page {
       size: A4;
-      margin: 15mm;
+      margin: 0;
     }
     
     * {
@@ -64,6 +64,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
       background: white;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      padding: 20mm;
     }
     
     .container {
@@ -76,9 +77,9 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     .header {
       background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #8b5cf6 100%);
       color: white;
-      padding: 30px 0;
+      padding: 24px;
       text-align: center;
-      margin: -15mm -15mm 30px -15mm;
+      margin: 0 0 16px 0;
       position: relative;
       overflow: hidden;
     }
