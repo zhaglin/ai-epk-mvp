@@ -9,6 +9,11 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  const resolvedPhoto = photoUrl
+    ? (photoUrl.startsWith('data:')
+        ? photoUrl
+        : `${baseUrl}${photoUrl}`)
+    : null;
 
   return `
 <!DOCTYPE html>
@@ -271,12 +276,16 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     /* Watermark */
     .watermark {
       position: fixed;
-      bottom: 10mm;
-      right: 10mm;
-      font-size: 9px;
-      color: #d1d5db;
-      opacity: 0.4;
-      font-weight: 500;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 42px;
+      color: rgba(59, 130, 246, 0.08);
+      letter-spacing: 4px;
+      font-weight: 800;
+      z-index: 0;
+      user-select: none;
+      white-space: nowrap;
     }
     
     /* Адаптивность для PDF */
@@ -315,7 +324,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     <div class="main-content">
       <!-- Фото артиста -->
       <div class="photo-section">
-        ${photoUrl ? `<img src="${baseUrl}${photoUrl}" alt="${name}" class="artist-photo" />` : '<div class="artist-photo" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 14px;">Нет фото</div>'}
+        ${resolvedPhoto ? `<img src="${resolvedPhoto}" alt="${name}" class="artist-photo" />` : '<div class="artist-photo" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 14px;">Нет фото</div>'}
       </div>
       
       <!-- Контент справа -->
@@ -367,7 +376,7 @@ export function generateHTMLTemplate(artistData: ArtistData): string {
     </div>
     
     <!-- Watermark -->
-    <div class="watermark">ArtistOne EPK v1.0</div>
+    <div class="watermark">ARTISTONE</div>
   </div>
 </body>
 </html>

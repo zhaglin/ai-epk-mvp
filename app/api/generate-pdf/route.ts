@@ -89,12 +89,32 @@ export async function POST(request: NextRequest) {
 
     // Устанавливаем HTML контент
     await page.setContent(htmlContent, {
-      waitUntil: ['networkidle0', 'load'],
+      waitUntil: ['domcontentloaded'],
       timeout: 30000,
     });
 
+    // Эмулируем экран для корректной печати CSS
+    await page.emulateMediaType('screen');
+
     // Ждем загрузки шрифтов
     await page.evaluateHandle('document.fonts.ready');
+
+    // Дожидаемся загрузки всех изображений (включая data URL)
+    await page.evaluate(() => {
+      const images = Array.from(document.images);
+      return Promise.all(
+        images.map((img) =>
+          img.complete
+            ? Promise.resolve(true)
+            : new Promise((resolve) => {
+                img.onload = img.onerror = () => resolve(true);
+              })
+        )
+      );
+    });
+
+    // Дополнительно ждем отрисовку
+    await page.waitForSelector('body .container', { timeout: 5000 });
     
     console.log('[PDF] Generating PDF...');
 
