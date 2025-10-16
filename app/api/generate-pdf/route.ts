@@ -30,6 +30,23 @@ export async function POST(request: NextRequest) {
 
     // Генерируем HTML контент
     const htmlContent = generateHTMLTemplate(artistData);
+
+    // Optional override to force fallback for diagnostics
+    if (process.env.PDF_FORCE_FALLBACK === 'true') {
+      console.warn('[PDF] PDF_FORCE_FALLBACK=true — using pdf-lib fallback');
+      const pdfBuffer = await generatePDFFallback(artistData);
+      const slug = artistData.name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+      return new NextResponse(Buffer.from(pdfBuffer), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
+          'Cache-Control': 'no-cache',
+        },
+      });
+    }
     
     // Определяем путь к Chrome/Chromium
     let executablePath: string;

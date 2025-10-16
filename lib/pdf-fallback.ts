@@ -2,7 +2,6 @@ import { ArtistData } from '@/types';
 import { PDFDocument, rgb, RotationTypes, StandardFonts } from 'pdf-lib';
 import fs from 'fs';
 import path from 'path';
-import fetch from 'node-fetch';
 
 // Fallback PDF генератор: локально собираем PDF без Chromium
 export async function generatePDFFallback(artistData: ArtistData): Promise<Buffer> {
