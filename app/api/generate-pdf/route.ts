@@ -120,6 +120,26 @@ export async function POST(request: NextRequest) {
       },
       { timeout: 5000 }
     );
+
+    // Если контент подозрительно пустой — используем локальный fallback (pdf-lib)
+    const textLen = await page.evaluate(() => document.body.innerText.trim().length);
+    if (textLen < 10) {
+      console.warn('[PDF] Page text length is too small, using pdf-lib fallback');
+      await browser.close();
+      browser = null;
+      const pdfBuffer = await generatePDFFallback(artistData);
+      const slug = artistData.name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_-]/g, '');
+      return new NextResponse(Buffer.from(pdfBuffer), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="EPK_${slug}.pdf"`,
+          'Cache-Control': 'no-cache',
+        },
+      });
+    }
     
     console.log('[PDF] Generating PDF...');
 
